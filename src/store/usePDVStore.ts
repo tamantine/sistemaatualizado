@@ -3,8 +3,8 @@
 // Controle de caixa, carrinho, vendas em espera
 // =============================================
 import { create } from 'zustand';
-import type { Produto, Caixa } from '../types';
-import { produtosService, caixasService, vendasService } from '../services/supabaseService';
+import type { Produto, Caixa, MovimentacaoCaixa } from '../types';
+import { produtosService, caixasService, vendasService, movimentacoesCaixaService } from '../services/supabaseService';
 import { produtosMock } from '../services/mockData';
 
 // Item no carrinho do PDV
@@ -47,6 +47,9 @@ interface PDVState {
     // Vendas em espera
     vendasEspera: VendaEspera[];
 
+    // Histórico de movimentações do caixa (sangria/suprimento) — sessão atual
+    movimentacoes: MovimentacaoCaixa[];
+
     // Modais
     modalPagamento: boolean;
     modalCaixa: boolean;
@@ -56,6 +59,8 @@ interface PDVState {
     // Ações do caixa
     abrirCaixa: (valorAbertura: number, operador: string) => void;
     fecharCaixa: () => void;
+    verificarCaixaAberto: () => Promise<void>;
+    registrarMovimentacao: (tipo: 'sangria' | 'suprimento', valor: number, motivo: string) => Promise<void>;
 
     // Ações do carrinho
     setBuscaProduto: (busca: string) => void;
@@ -105,6 +110,7 @@ export const usePDVStore = create<PDVState>((set, get) => ({
     descontoGeral: 0,
     descontoValor: 0,
     vendasEspera: [],
+    movimentacoes: [],
     modalPagamento: false,
     modalCaixa: false,
     modalSangria: false,
@@ -123,6 +129,35 @@ export const usePDVStore = create<PDVState>((set, get) => ({
     },
 
     // --- Caixa ---
+
+    // Verifica se há caixa aberto (Supabase ou localStorage) — chamado ao montar o PDV
+    verificarCaixaAberto: async () => {
+        // 1. Tenta buscar caixa aberto no Supabase
+        try {
+            const caixaSupabase = await caixasService.buscarAberto();
+            if (caixaSupabase) {
+                set({ caixa: caixaSupabase, caixaAberto: true });
+                localStorage.setItem('pdv_caixa', JSON.stringify(caixaSupabase));
+                return;
+            }
+        } catch { /* Supabase indisponível, tenta localStorage */ }
+
+        // 2. Fallback: verifica localStorage
+        try {
+            const salvo = localStorage.getItem('pdv_caixa');
+            if (salvo) {
+                const caixaSalvo: Caixa = JSON.parse(salvo);
+                if (caixaSalvo.status === 'aberto') {
+                    set({ caixa: caixaSalvo, caixaAberto: true });
+                    return;
+                }
+            }
+        } catch { /* ignora erros de parse */ }
+
+        // 3. Nenhum caixa aberto encontrado — mantém estado inicial
+        set({ caixa: null, caixaAberto: false });
+    },
+
     abrirCaixa: async (valorAbertura, operador) => {
         const dadosCaixa = {
             numero: 1,
@@ -141,16 +176,17 @@ export const usePDVStore = create<PDVState>((set, get) => ({
         };
         try {
             const caixaCriada = await caixasService.abrir(dadosCaixa);
+            localStorage.setItem('pdv_caixa', JSON.stringify(caixaCriada));
             set({ caixa: caixaCriada, caixaAberto: true, modalCaixa: false });
         } catch {
             // Fallback: cria caixa local com ID
             const caixa: Caixa = { 
                 id: crypto.randomUUID(), 
                 ...dadosCaixa,
-                // Garante que os campos numéricos estão definidos
                 valor_sangria: dadosCaixa.valor_sangria || 0,
                 valor_suprimento: dadosCaixa.valor_suprimento || 0,
             };
+            localStorage.setItem('pdv_caixa', JSON.stringify(caixa));
             set({ caixa, caixaAberto: true, modalCaixa: false });
         }
     },
@@ -164,10 +200,68 @@ export const usePDVStore = create<PDVState>((set, get) => ({
                 });
             } catch { /* continua mesmo sem salvar */ }
         }
+        // Remove persistência do localStorage
+        localStorage.removeItem('pdv_caixa');
         set((s) => ({
             caixa: s.caixa ? { ...s.caixa, status: 'fechado' as const, fechado_em: new Date().toISOString() } : null,
             caixaAberto: false,
         }));
+    },
+
+    // --- Registrar Sangria / Suprimento ---
+    registrarMovimentacao: async (tipo, valor, motivo) => {
+        const { caixa } = get();
+        if (!caixa) return;
+
+        // 1. Atualiza o estado do caixa localmente
+        const caixaAtualizado: Caixa = {
+            ...caixa,
+            valor_dinheiro: tipo === 'sangria'
+                ? caixa.valor_dinheiro - valor
+                : caixa.valor_dinheiro + valor,
+            valor_sangria: tipo === 'sangria'
+                ? caixa.valor_sangria + valor
+                : caixa.valor_sangria,
+            valor_suprimento: tipo === 'suprimento'
+                ? caixa.valor_suprimento + valor
+                : caixa.valor_suprimento,
+        };
+
+        // Cria registro local da movimentação
+        const movLocal: MovimentacaoCaixa = {
+            id: crypto.randomUUID(),
+            caixa_id: caixa.id,
+            tipo,
+            valor,
+            motivo,
+            operador_nome: caixa.operador_nome,
+            created_at: new Date().toISOString(),
+        };
+
+        // Atualiza estado e localStorage imediatamente
+        set((s) => ({
+            caixa: caixaAtualizado,
+            movimentacoes: [movLocal, ...s.movimentacoes],
+        }));
+        localStorage.setItem('pdv_caixa', JSON.stringify(caixaAtualizado));
+
+        // 2. Persiste no Supabase (best-effort)
+        try {
+            await movimentacoesCaixaService.criar({
+                caixa_id: caixa.id,
+                tipo,
+                valor,
+                motivo,
+                operador_nome: caixa.operador_nome,
+            });
+            await caixasService.atualizar(caixa.id, {
+                valor_dinheiro: caixaAtualizado.valor_dinheiro,
+                valor_sangria: caixaAtualizado.valor_sangria,
+                valor_suprimento: caixaAtualizado.valor_suprimento,
+            });
+        } catch (err) {
+            console.warn('[PDV] Movimentação salva localmente (Supabase indisponível):', err);
+        }
     },
 
     // --- Carrinho ---

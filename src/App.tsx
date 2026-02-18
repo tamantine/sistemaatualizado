@@ -12,6 +12,7 @@ import Financeiro from './pages/Financeiro';
 import CRM from './pages/CRM';
 import Compras from './pages/Compras';
 import HortifrutiPage from './pages/Hortifruti';
+import PDVStandalone from './pages/PDVStandalone';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuthStore } from './store/useAuthStore';
@@ -40,6 +41,16 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+
+          {/* PDV em tela cheia — sem o layout principal */}
+          <Route
+            path="/pdv-standalone"
+            element={
+              <ProtectedRoute>
+                <PDVStandalone />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             element={

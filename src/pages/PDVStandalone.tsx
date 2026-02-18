@@ -1,8 +1,8 @@
 // =============================================
-// Página: PDV — Frente de Caixa
-// Tela principal do ponto de venda
+// Página: PDV Standalone — Tela Cheia
+// Abre o PDV sem o layout principal, em fullscreen
 // =============================================
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePDVStore } from '../store/usePDVStore';
 import { useAppStore } from '../store/useAppStore';
 import ModalAberturaCaixa from '../components/pdv/ModalAberturaCaixa';
@@ -11,15 +11,17 @@ import Carrinho from '../components/pdv/Carrinho';
 import ModalPagamento from '../components/pdv/ModalPagamento';
 import ModalEspera from '../components/pdv/ModalEspera';
 import ModalSangria from '../components/pdv/ModalSangria';
-import ModalDispositivos from '../components/pdv/ModalDispositivos';
+import ToastContainer from '../components/ui/Toast';
 import { formatarMoeda, formatarDataHora } from '../utils/formatters';
 import {
     Monitor, DollarSign, CreditCard, QrCode,
-    ArrowRightLeft, Clock, LogOut, Maximize,
-    Banknote, Settings,
+    ArrowRightLeft, Clock, LogOut, Minimize,
+    Banknote,
 } from 'lucide-react';
 
-export default function PDV() {
+export default function PDVStandalone() {
+    const containerRef = useRef<HTMLDivElement>(null);
+
     const {
         caixaAberto, caixa,
         setModalPagamento, setModalEspera, setModalSangria,
@@ -29,12 +31,26 @@ export default function PDV() {
         verificarCaixaAberto,
     } = usePDVStore();
     const { adicionarToast } = useAppStore();
-    const [modalDispositivos, setModalDispositivos] = useState(false);
 
-    // Ao montar: verifica caixa aberto (Supabase/localStorage) e carrega produtos
+    // Ao montar: verifica caixa, carrega produtos e entra em fullscreen
     useEffect(() => {
         verificarCaixaAberto();
         carregarProdutos();
+
+        // Solicitar tela cheia automaticamente
+        const el = document.documentElement;
+        if (el.requestFullscreen) {
+            el.requestFullscreen().catch(() => {
+                // Usuário pode ter bloqueado — sem problema
+            });
+        }
+
+        return () => {
+            // Sair do fullscreen ao desmontar (fechar aba)
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => {});
+            }
+        };
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Atalhos de teclado globais
@@ -42,13 +58,10 @@ export default function PDV() {
         const handler = (e: KeyboardEvent) => {
             if (!caixaAberto) return;
 
-            // F4 = Pagamento
             if (e.key === 'F4') {
                 e.preventDefault();
                 if (itens.length > 0) setModalPagamento(true);
             }
-
-            // F9 = Salvar em espera
             if (e.key === 'F9') {
                 e.preventDefault();
                 if (itens.length > 0) {
@@ -56,20 +69,14 @@ export default function PDV() {
                     adicionarToast({ tipo: 'info', titulo: 'Venda salva em espera' });
                 }
             }
-
-            // F10 = Ver vendas em espera
             if (e.key === 'F10') {
                 e.preventDefault();
                 setModalEspera(true);
             }
-
-            // F6 = Sangria/Suprimento
             if (e.key === 'F6') {
                 e.preventDefault();
                 setModalSangria(true);
             }
-
-            // Escape = Limpar carrinho (com confirmação)
             if (e.key === 'Escape' && itens.length > 0) {
                 e.preventDefault();
                 if (confirm('Deseja cancelar a venda atual?')) {
@@ -83,17 +90,28 @@ export default function PDV() {
         return () => window.removeEventListener('keydown', handler);
     }, [caixaAberto, itens, setModalPagamento, setModalEspera, setModalSangria, salvarEmEspera, limparCarrinho, adicionarToast]);
 
+    const sairFullscreen = () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+        }
+        window.close();
+    };
+
     // Se caixa não está aberto, mostra tela de abertura
     if (!caixaAberto) {
-        return <ModalAberturaCaixa />;
+        return (
+            <div ref={containerRef} className="min-h-screen bg-surface-900 flex items-center justify-center">
+                <ModalAberturaCaixa />
+                <ToastContainer />
+            </div>
+        );
     }
 
     return (
-        <div className="h-[calc(100vh-4.5rem)] flex flex-col animate-fade-in">
+        <div ref={containerRef} className="h-screen flex flex-col bg-surface-900 animate-fade-in">
             {/* Barra de status do caixa */}
             <div className="flex items-center justify-between px-4 py-2 bg-surface-800/60 border-b border-surface-700/50">
                 <div className="flex items-center gap-4">
-                    {/* Indicador de caixa aberto */}
                     <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse-green" />
                         <span className="text-xs font-semibold text-surface-300 flex items-center gap-1.5">
@@ -101,9 +119,11 @@ export default function PDV() {
                         </span>
                         <span className="text-xs text-surface-500">•</span>
                         <span className="text-xs text-surface-400">{caixa?.operador_nome}</span>
+                        <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-brand-600/20 text-brand-400 font-medium">
+                            TELA CHEIA
+                        </span>
                     </div>
 
-                    {/* Resumo do caixa */}
                     <div className="hidden md:flex items-center gap-3 text-xs text-surface-500">
                         <span className="flex items-center gap-1">
                             <Banknote size={12} className="text-green-400" />
@@ -124,7 +144,6 @@ export default function PDV() {
                     </div>
                 </div>
 
-                {/* Ações rápidas */}
                 <div className="flex items-center gap-1">
                     <button
                         onClick={() => setModalSangria(true)}
@@ -148,22 +167,11 @@ export default function PDV() {
                     </button>
 
                     <button
-                        onClick={() => setModalDispositivos(true)}
+                        onClick={sairFullscreen}
                         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-surface-400 hover:text-surface-200 hover:bg-surface-700 transition-colors"
-                        title="Balança e Impressora"
+                        title="Sair da tela cheia"
                     >
-                        <Settings size={13} /> <span className="hidden sm:inline">Dispositivos</span>
-                    </button>
-
-                    <button
-                        onClick={() => {
-                            const base = window.location.origin;
-                            window.open(`${base}/pdv-standalone`, '_blank', 'noopener');
-                        }}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-surface-400 hover:text-surface-200 hover:bg-surface-700 transition-colors"
-                        title="Abrir PDV em tela cheia (nova aba)"
-                    >
-                        <Maximize size={13} />
+                        <Minimize size={13} />
                     </button>
 
                     <button
@@ -181,14 +189,11 @@ export default function PDV() {
                 </div>
             </div>
 
-            {/* Corpo principal: Busca (esquerda) + Carrinho (direita) */}
+            {/* Corpo principal */}
             <div className="flex-1 flex overflow-hidden">
-                {/* Área de busca e produtos */}
                 <div className="flex-1 p-4 overflow-hidden flex flex-col">
                     <BuscaProduto />
                 </div>
-
-                {/* Carrinho lateral — largura fixa */}
                 <div className="w-[340px] xl:w-[380px] shrink-0 overflow-hidden">
                     <Carrinho />
                 </div>
@@ -211,7 +216,9 @@ export default function PDV() {
             <ModalPagamento />
             <ModalEspera />
             <ModalSangria />
-            <ModalDispositivos aberto={modalDispositivos} onFechar={() => setModalDispositivos(false)} />
+
+            {/* Toast notifications */}
+            <ToastContainer />
         </div>
     );
 }

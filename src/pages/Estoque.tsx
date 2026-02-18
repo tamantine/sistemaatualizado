@@ -98,10 +98,15 @@ export default function Estoque() {
     };
 
     // Excluir produto
-    const excluirProduto = (id: string) => {
-        removerProduto(id);
-        adicionarToast({ tipo: 'sucesso', titulo: 'Produto excluído' });
-        setConfirmarExclusao(null);
+    const excluirProduto = async (id: string) => {
+        try {
+            await removerProduto(id);
+            adicionarToast({ tipo: 'sucesso', titulo: 'Produto excluído', mensagem: 'Produto removido com sucesso' });
+        } catch {
+            adicionarToast({ tipo: 'erro', titulo: 'Erro ao excluir', mensagem: 'Não foi possível excluir o produto. Tente novamente.' });
+        } finally {
+            setConfirmarExclusao(null);
+        }
     };
 
     // Obtém nome da categoria

@@ -103,6 +103,12 @@ export const useEstoqueStore = create<EstoqueState>((set, get) => ({
     },
 
     removerProduto: async (id) => {
+        const { usandoMock } = get();
+        if (usandoMock) {
+            // Modo offline: remove apenas do estado local
+            set((s) => ({ produtos: s.produtos.filter((p) => p.id !== id) }));
+            return;
+        }
         try {
             await produtosService.remover(id);
             set((s) => ({ produtos: s.produtos.filter((p) => p.id !== id) }));
