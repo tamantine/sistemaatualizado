@@ -1,4 +1,4 @@
-import { Categoria, Produto, Fornecedor, Cliente, MetricasDashboard } from '../types';
+import { Categoria, Produto, Fornecedor, Cliente, MetricasDashboard, Venda } from '../types';
 
 // ------ Categorias ------
 export const categoriasMock: Categoria[] = [];
@@ -29,6 +29,6 @@ export const metricasMock: MetricasDashboard = {
     ],
     vendasPorCategoria: [],
     topProdutos: [],
-    ultimasVendas: [],
+    ultimasVendas: [] as Venda[],
     alertasEstoque: [],
 };
