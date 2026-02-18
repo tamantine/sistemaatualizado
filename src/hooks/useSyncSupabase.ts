@@ -7,12 +7,16 @@ import { useEstoqueStore } from '../store/useEstoqueStore';
 import { usePDVStore } from '../store/usePDVStore';
 import { useCRMStore } from '../store/useCRMStore';
 import { useFinanceiroStore } from '../store/useFinanceiroStore';
+import { useComprasStore } from '../store/useComprasStore';
+import { useHortifrutiStore } from '../store/useHortifrutiStore';
 
 export function useSyncSupabase() {
     const { carregarDados: carregarEstoque } = useEstoqueStore();
     const { carregarProdutos } = usePDVStore();
     const { carregarDados: carregarCRM } = useCRMStore();
     const { carregarDados: carregarFinanceiro } = useFinanceiroStore();
+    const { carregarDados: carregarCompras } = useComprasStore();
+    const { carregarDados: carregarHortifruti } = useHortifrutiStore();
 
     useEffect(() => {
         // Carregar dados iniciais de forma paralela
@@ -22,7 +26,7 @@ export function useSyncSupabase() {
                 return null;
             }),
             carregarProdutos().catch(err => {
-                console.error('[Sync] Erro ao carregar produtos:', err);
+                console.error('[Sync] Erro ao carregar produtos (PDV):', err);
                 return null;
             }),
             carregarCRM().catch(err => {
@@ -33,8 +37,16 @@ export function useSyncSupabase() {
                 console.error('[Sync] Erro ao carregar financeiro:', err);
                 return null;
             }),
+            carregarCompras().catch(err => {
+                console.error('[Sync] Erro ao carregar compras:', err);
+                return null;
+            }),
+            carregarHortifruti().catch(err => {
+                console.error('[Sync] Erro ao carregar hortifruti:', err);
+                return null;
+            }),
         ]).catch(err => {
             console.error('[Sync] Erro geral na sincronização:', err);
         });
-    }, [carregarEstoque, carregarProdutos, carregarCRM, carregarFinanceiro]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }

@@ -3,6 +3,7 @@
 // Qualidade, Rastreabilidade, Perdas, Sazonalidade
 // =============================================
 import { create } from 'zustand';
+import { qualidadeService, perdasService, rastreiosService, sazonalidadeService } from '../services/supabaseService';
 
 // Registro de qualidade de lote
 export interface RegistroQualidade {
@@ -43,8 +44,10 @@ export interface RegistroPerda {
 
 // Info de sazonalidade
 export interface InfoSazonal {
+    id?: string;
     mes: string;
     mesNum: number;
+    mes_num?: number;
     produtos_safra: string[];
     qualidade_media: number;
     custo_medio: 'baixo' | 'medio' | 'alto';
@@ -77,13 +80,17 @@ interface HortifrutiState {
     mesSelecionado: number;
     modalQualidade: boolean;
     modalPerda: boolean;
+    carregando: boolean;
 
     setAbaAtiva: (aba: AbaHortifruti) => void;
     setMesSelecionado: (mes: number) => void;
     setModalQualidade: (v: boolean) => void;
     setModalPerda: (v: boolean) => void;
-    adicionarQualidade: (r: RegistroQualidade) => void;
-    adicionarPerda: (r: RegistroPerda) => void;
+
+    // Supabase
+    carregarDados: () => Promise<void>;
+    adicionarQualidade: (r: Omit<RegistroQualidade, 'id' | 'created_at'>) => Promise<void>;
+    adicionarPerda: (r: Omit<RegistroPerda, 'id'>) => Promise<void>;
 
     estatisticas: () => {
         totalInspecoes: number; aprovados: number; rejeitados: number; taxaAprovacao: number;
@@ -101,13 +108,52 @@ export const useHortifrutiStore = create<HortifrutiState>((set, get) => ({
     mesSelecionado: new Date().getMonth() + 1,
     modalQualidade: false,
     modalPerda: false,
+    carregando: false,
 
     setAbaAtiva: (aba) => set({ abaAtiva: aba }),
     setMesSelecionado: (mes) => set({ mesSelecionado: mes }),
     setModalQualidade: (v) => set({ modalQualidade: v }),
     setModalPerda: (v) => set({ modalPerda: v }),
-    adicionarQualidade: (r) => set((s) => ({ registrosQualidade: [r, ...s.registrosQualidade] })),
-    adicionarPerda: (r) => set((s) => ({ registrosPerdas: [r, ...s.registrosPerdas] })),
+
+    carregarDados: async () => {
+        set({ carregando: true });
+        try {
+            const [registrosQualidade, registrosPerdas, sazonalidade, rastreios] = await Promise.all([
+                qualidadeService.listar(),
+                perdasService.listar(),
+                sazonalidadeService.listar(),
+                rastreiosService.listar(),
+            ]);
+            set({ registrosQualidade, registrosPerdas, sazonalidade, rastreios, carregando: false });
+        } catch (err) {
+            console.error('[Hortifruti] Erro ao carregar dados do Supabase:', err);
+            set({ carregando: false });
+        }
+    },
+
+    adicionarQualidade: async (reg) => {
+        try {
+            const novo = await qualidadeService.criar(reg);
+            set((s) => ({ registrosQualidade: [novo, ...s.registrosQualidade] }));
+        } catch (err) {
+            console.error('[Hortifruti] Erro ao criar registro de qualidade:', err);
+            // Fallback local
+            const local = { ...reg, id: crypto.randomUUID(), created_at: new Date().toISOString() } as RegistroQualidade;
+            set((s) => ({ registrosQualidade: [local, ...s.registrosQualidade] }));
+        }
+    },
+
+    adicionarPerda: async (reg) => {
+        try {
+            const nova = await perdasService.criar(reg);
+            set((s) => ({ registrosPerdas: [nova, ...s.registrosPerdas] }));
+        } catch (err) {
+            console.error('[Hortifruti] Erro ao criar registro de perda:', err);
+            // Fallback local
+            const local = { ...reg, id: crypto.randomUUID() } as RegistroPerda;
+            set((s) => ({ registrosPerdas: [local, ...s.registrosPerdas] }));
+        }
+    },
 
     estatisticas: () => {
         const { registrosQualidade, registrosPerdas } = get();

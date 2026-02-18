@@ -9,6 +9,7 @@ import type {
     ContaPagar, ContaReceber, MovimentacaoCaixa,
     PedidoCompra, PedidoCompraItem, Promocao,
 } from '../types';
+import type { RegistroQualidade, RegistroPerda, InfoSazonal, Rastreio } from '../store/useHortifrutiStore';
 import { metricasMock } from './mockData';
 
 // =============================================
@@ -552,6 +553,87 @@ export const pedidosCompraService = {
         await supabase.from('pedido_compra_itens').delete().eq('pedido_id', id);
         const { error } = await supabase.from('pedidos_compra').delete().eq('id', id);
         if (error) tratarErro(error, 'remover pedido de compra');
+    },
+};
+
+// =============================================
+// HORTIFRUTI — Qualidade, Perdas, Rastreios, Sazonalidade
+// =============================================
+export const qualidadeService = {
+    async listar(): Promise<RegistroQualidade[]> {
+        const { data, error } = await supabase
+            .from('registros_qualidade')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) tratarErro(error, 'listar registros de qualidade');
+        return data as RegistroQualidade[];
+    },
+
+    async criar(reg: Omit<RegistroQualidade, 'id' | 'created_at'>): Promise<RegistroQualidade> {
+        const { data, error } = await supabase
+            .from('registros_qualidade')
+            .insert(reg)
+            .select()
+            .single();
+        if (error) tratarErro(error, 'criar registro de qualidade');
+        return data as RegistroQualidade;
+    },
+};
+
+export const perdasService = {
+    async listar(): Promise<RegistroPerda[]> {
+        const { data, error } = await supabase
+            .from('perdas')
+            .select('*')
+            .order('data_registro', { ascending: false });
+        if (error) tratarErro(error, 'listar perdas');
+        return data as RegistroPerda[];
+    },
+
+    async criar(perda: Omit<RegistroPerda, 'id'>): Promise<RegistroPerda> {
+        const { data, error } = await supabase
+            .from('perdas')
+            .insert(perda)
+            .select()
+            .single();
+        if (error) tratarErro(error, 'criar perda');
+        return data as RegistroPerda;
+    },
+};
+
+export const rastreiosService = {
+    async listar(): Promise<Rastreio[]> {
+        const { data, error } = await supabase
+            .from('rastreios')
+            .select('*')
+            .order('data_chegada', { ascending: false });
+        if (error) tratarErro(error, 'listar rastreios');
+        return data as Rastreio[];
+    },
+
+    async criar(rastreio: Omit<Rastreio, 'id'>): Promise<Rastreio> {
+        const { data, error } = await supabase
+            .from('rastreios')
+            .insert(rastreio)
+            .select()
+            .single();
+        if (error) tratarErro(error, 'criar rastreio');
+        return data as Rastreio;
+    },
+};
+
+export const sazonalidadeService = {
+    async listar(): Promise<InfoSazonal[]> {
+        const { data, error } = await supabase
+            .from('sazonalidade')
+            .select('*')
+            .order('mes_num');
+        if (error) tratarErro(error, 'listar sazonalidade');
+        // Mapear mes_num -> mesNum para compatibilidade com o store
+        return (data || []).map((row: any) => ({
+            ...row,
+            mesNum: row.mes_num,
+        })) as InfoSazonal[];
     },
 };
 

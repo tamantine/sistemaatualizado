@@ -4,8 +4,7 @@
 // =============================================
 import { create } from 'zustand';
 import type { Cliente, Promocao, TabelaPreco } from '../types';
-import { clientesService } from '../services/supabaseService';
-import { clientesMock, promocoesMock } from '../services/mockData';
+import { clientesService, promocoesService } from '../services/supabaseService';
 
 // Níveis de fidelidade
 export const niveisFidelidade = [
@@ -77,12 +76,12 @@ interface CRMState {
 }
 
 export const useCRMStore = create<CRMState>((set, get) => ({
-    clientes: clientesMock,
+    clientes: [],
     buscaCliente: '',
     filtroAtivo: 'todos',
     clienteSelecionado: null,
     modalCliente: false,
-    promocoes: promocoesMock,
+    promocoes: [],
     buscaPromocao: '',
     filtroPromocao: 'todos',
     modalPromocao: false,
@@ -95,10 +94,13 @@ export const useCRMStore = create<CRMState>((set, get) => ({
 
     carregarDados: async () => {
         try {
-            const clientes = await clientesService.listar();
-            set({ clientes, usandoMock: false });
+            const [clientes, promocoes] = await Promise.all([
+                clientesService.listar(),
+                promocoesService.listar(),
+            ]);
+            set({ clientes, promocoes, usandoMock: false });
         } catch (err) {
-            console.error('[CRM] Erro ao carregar clientes:', err);
+            console.error('[CRM] Erro ao carregar dados:', err);
             set({ usandoMock: false });
         }
     },
