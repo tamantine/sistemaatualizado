@@ -470,7 +470,7 @@ export const contasReceberService = {
     },
 
     async atualizar(id: string, dados: Partial<ContaReceber>): Promise<ContaReceber> {
-        const { cliente, ...rest } = dados;
+        const { ...rest } = dados;
         const { data, error } = await supabase
             .from('contas_receber')
             .update({ ...rest, updated_at: new Date().toISOString() })
@@ -536,7 +536,7 @@ export const pedidosCompraService = {
     },
 
     async atualizar(id: string, dados: Partial<PedidoCompra>): Promise<PedidoCompra> {
-        const { fornecedor, itens, ...rest } = dados;
+        const { ...rest } = dados;
         const { data, error } = await supabase
             .from('pedidos_compra')
             .update({ ...rest, updated_at: new Date().toISOString() })
@@ -578,7 +578,7 @@ export const promocoesService = {
     },
 
     async atualizar(id: string, dados: Partial<Promocao>): Promise<Promocao> {
-        const { produtos, ...rest } = dados;
+        const { ...rest } = dados;
         const { data, error } = await supabase
             .from('promocoes')
             .update({ ...rest, updated_at: new Date().toISOString() })
