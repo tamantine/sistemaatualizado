@@ -5,8 +5,12 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import ToastContainer from '../ui/Toast';
+import { useSyncSupabase } from '../../hooks/useSyncSupabase';
 
 export default function MainLayout() {
+    // Sincronizar dados com Supabase ao entrar
+    useSyncSupabase();
+
     return (
         <div className="flex h-screen overflow-hidden bg-surface-900">
             {/* Sidebar */}

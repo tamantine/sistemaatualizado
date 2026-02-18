@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Environment variables - NUNCA commitar arquivos .env com credenciais
+.env
+.env.local
+.env.*.local

@@ -4,13 +4,14 @@
 // =============================================
 import { useRef, useEffect } from 'react';
 import { usePDVStore } from '../../store/usePDVStore';
+import { useEstoqueStore } from '../../store/useEstoqueStore';
 import { useAppStore } from '../../store/useAppStore';
 import { Search, Barcode, Tag } from 'lucide-react';
 import { formatarMoeda } from '../../utils/formatters';
-import { categoriasMock } from '../../services/mockData';
 
 export default function BuscaProduto() {
     const { buscaProduto, setBuscaProduto, adicionarItem, produtosFiltrados } = usePDVStore();
+    const { categorias } = useEstoqueStore();
     const { adicionarToast } = useAppStore();
     const inputRef = useRef<HTMLInputElement>(null);
     const produtos = produtosFiltrados();
@@ -47,9 +48,9 @@ export default function BuscaProduto() {
         inputRef.current?.focus();
     };
 
-    // Busca nome da categoria
+    // Busca nome da categoria do store
     const nomeCategoria = (catId?: string) =>
-        categoriasMock.find((c) => c.id === catId)?.nome || '';
+        categorias.find((c) => c.id === catId)?.nome || '';
 
     return (
         <div className="flex flex-col h-full">

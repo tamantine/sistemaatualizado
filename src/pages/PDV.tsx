@@ -24,8 +24,14 @@ export default function PDV() {
         setModalPagamento, setModalEspera, setModalSangria,
         vendasEspera, itens, limparCarrinho,
         salvarEmEspera,
+        carregarProdutos,
     } = usePDVStore();
     const { adicionarToast } = useAppStore();
+
+    // Carregar produtos ao montar o componente
+    useEffect(() => {
+        carregarProdutos();
+    }, [carregarProdutos]);
 
     // Atalhos de teclado globais
     useEffect(() => {

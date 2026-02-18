@@ -4,8 +4,8 @@
 // =============================================
 import { create } from 'zustand';
 import type { Produto, Caixa } from '../types';
-import { produtosMock } from '../services/mockData';
 import { produtosService, caixasService, vendasService } from '../services/supabaseService';
+import { produtosMock } from '../services/mockData';
 
 // Item no carrinho do PDV
 export interface CarrinhoItem {
@@ -111,13 +111,13 @@ export const usePDVStore = create<PDVState>((set, get) => ({
     modalEspera: false,
     usandoMock: false,
 
-    // Carregar produtos do Supabase
+    // Carregar produtos do Supabase (com fallback para mock)
     carregarProdutos: async () => {
         try {
             const produtos = await produtosService.listar();
             set({ produtos, usandoMock: false });
-        } catch {
-            console.warn('[PDV] Supabase indisponível, usando mock');
+        } catch (err) {
+            console.warn('[PDV] Supabase indisponível, usando produtos de exemplo:', err);
             set({ produtos: produtosMock, usandoMock: true });
         }
     },
@@ -140,11 +140,17 @@ export const usePDVStore = create<PDVState>((set, get) => ({
             created_at: new Date().toISOString(),
         };
         try {
-            const caixa = await caixasService.abrir(dadosCaixa);
-            set({ caixa, caixaAberto: true, modalCaixa: false });
+            const caixaCriada = await caixasService.abrir(dadosCaixa);
+            set({ caixa: caixaCriada, caixaAberto: true, modalCaixa: false });
         } catch {
-            // Fallback: cria caixa local
-            const caixa: Caixa = { id: crypto.randomUUID(), ...dadosCaixa };
+            // Fallback: cria caixa local com ID
+            const caixa: Caixa = { 
+                id: crypto.randomUUID(), 
+                ...dadosCaixa,
+                // Garante que os campos numéricos estão definidos
+                valor_sangria: dadosCaixa.valor_sangria || 0,
+                valor_suprimento: dadosCaixa.valor_suprimento || 0,
+            };
             set({ caixa, caixaAberto: true, modalCaixa: false });
         }
     },
@@ -178,7 +184,7 @@ export const usePDVStore = create<PDVState>((set, get) => ({
                             ? {
                                 ...i,
                                 quantidade: i.quantidade + quantidade,
-                                subtotal: (i.quantidade + quantidade) * i.preco_unitario - i.desconto,
+                                subtotal: Math.max(0, (i.quantidade + quantidade) * i.preco_unitario - i.desconto),
                             }
                             : i
                     ),
@@ -209,7 +215,7 @@ export const usePDVStore = create<PDVState>((set, get) => ({
         set((s) => ({
             itens: s.itens.map((i) =>
                 i.id === itemId
-                    ? { ...i, quantidade, subtotal: quantidade * i.preco_unitario - i.desconto }
+                    ? { ...i, quantidade, subtotal: Math.max(0, quantidade * i.preco_unitario - i.desconto) }
                     : i
             ),
         })),
@@ -218,7 +224,7 @@ export const usePDVStore = create<PDVState>((set, get) => ({
         set((s) => ({
             itens: s.itens.map((i) =>
                 i.id === itemId
-                    ? { ...i, desconto, subtotal: i.quantidade * i.preco_unitario - desconto }
+                    ? { ...i, desconto: Math.max(0, desconto), subtotal: Math.max(0, i.quantidade * i.preco_unitario - desconto) }
                     : i
             ),
         })),

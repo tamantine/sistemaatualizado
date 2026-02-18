@@ -1,5 +1,5 @@
 // =============================================
-// Store: Autenticação (Supabase Auth)
+// Store: Autenticação (Supabase Auth + Modo Demo)
 // =============================================
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
@@ -10,50 +10,111 @@ interface AuthState {
     session: Session | null;
     loading: boolean;
     inicializado: boolean;
+    modoDemo: boolean;
 
     // Ações
     signIn: (email: string, pass: string) => Promise<{ error: any }>;
     signOut: () => Promise<void>;
     initialize: () => Promise<void>;
+    demoLogin: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
     user: null,
     session: null,
     loading: false,
     inicializado: false,
+    modoDemo: false,
 
     initialize: async () => {
-        // Verificar sessão atual
-        const { data: { session } } = await supabase.auth.getSession();
-        set({
-            session,
-            user: session?.user ?? null,
-            inicializado: true
-        });
+        try {
+            // Timeout de 5 segundos para evitar travar
+            const sessionPromise = supabase.auth.getSession();
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Timeout ao obter sessão')), 5000)
+            );
 
-        // Escutar mudanças na autenticação
-        supabase.auth.onAuthStateChange((_event, session) => {
+            const { data: { session } } = (await Promise.race([
+                sessionPromise,
+                timeoutPromise,
+            ])) as any;
+
             set({
                 session,
                 user: session?.user ?? null,
-                inicializado: true
+                inicializado: true,
             });
+
+            // Escutar mudanças na autenticação (sem bloquear)
+            supabase.auth.onAuthStateChange((_event, session) => {
+                // Não sobrescreve se estiver em modo demo
+                if (!get().modoDemo) {
+                    set({
+                        session,
+                        user: session?.user ?? null,
+                        inicializado: true,
+                    });
+                }
+            });
+        } catch (err) {
+            console.error('[Auth] Erro na inicialização:', err);
+            // Marca como inicializado mesmo com erro, para a UI não ficar presa
+            set({
+                inicializado: true,
+                user: null,
+                session: null,
+            });
+        }
+    },
+
+    demoLogin: () => {
+        // Cria um usuário demo sem precisar do Supabase
+        const demoUser = {
+            id: 'demo-user-00000000-0000-0000-0000-000000000000',
+            aud: 'authenticated',
+            role: 'authenticated',
+            email: 'demo@hortifruti.com.br',
+            email_confirmed_at: new Date().toISOString(),
+            phone: '',
+            confirmed_at: new Date().toISOString(),
+            last_sign_in_at: new Date().toISOString(),
+            app_metadata: { provider: 'demo', providers: ['demo'] },
+            user_metadata: { nome: 'Usuário Demo', cargo: 'Gerente' },
+            identities: [],
+            factors: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        } as unknown as User;
+
+        set({
+            user: demoUser,
+            session: null,
+            inicializado: true,
+            modoDemo: true,
         });
     },
 
     signIn: async (email, password) => {
         set({ loading: true });
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-        set({ loading: false });
-        return { error };
+        try {
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            set({ loading: false });
+            return { error };
+        } catch (err) {
+            set({ loading: false });
+            return { error: err };
+        }
     },
 
     signOut: async () => {
-        await supabase.auth.signOut();
-        set({ user: null, session: null });
+        const { modoDemo } = get();
+        if (!modoDemo) {
+            try {
+                await supabase.auth.signOut();
+            } catch (err) {
+                console.error('[Auth] Erro ao fazer logout:', err);
+            }
+        }
+        set({ user: null, session: null, modoDemo: false, inicializado: true });
     },
 }));

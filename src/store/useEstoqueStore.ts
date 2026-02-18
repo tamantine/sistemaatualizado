@@ -51,15 +51,25 @@ export const useEstoqueStore = create<EstoqueState>((set, get) => ({
                 categoriasService.listar(),
                 fornecedoresService.listar(),
             ]);
-            set({ produtos, categorias, fornecedores, carregando: false, usandoMock: false });
+            set({ 
+                produtos, 
+                categorias, 
+                fornecedores, 
+                carregando: false, 
+                usandoMock: false,
+                erro: null
+            });
         } catch (err) {
-            console.warn('[Estoque] Supabase indisponível, usando dados mock:', err);
+            const mensagem = err instanceof Error ? err.message : 'Erro desconhecido ao carregar dados do Supabase';
+            console.warn('[Estoque] Supabase indisponível, usando dados de exemplo:', mensagem);
+            // Fallback para dados mock — UI funciona normalmente
             set({
                 produtos: produtosMock,
                 categorias: categoriasMock,
                 fornecedores: fornecedoresMock,
                 carregando: false,
                 usandoMock: true,
+                erro: null,
             });
         }
     },
@@ -69,59 +79,36 @@ export const useEstoqueStore = create<EstoqueState>((set, get) => ({
     setPaginaAtual: (paginaAtual) => set({ paginaAtual }),
 
     adicionarProduto: async (prod) => {
-        const { usandoMock } = get();
-        if (usandoMock) {
-            const novoProduto: Produto = {
-                ...prod as Produto,
-                id: (prod as Produto).id || crypto.randomUUID(),
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            };
+        try {
+            // Remove campos que são calculados ou de relação
+            const { id, created_at, updated_at, categoria, fornecedor, ...dados } = prod as Produto;
+            const novoProduto = await produtosService.criar(dados);
             set((s) => ({ produtos: [novoProduto, ...s.produtos] }));
-        } else {
-            try {
-                // Remove campos que são calculados ou de relação
-                const { id, created_at, updated_at, categoria, fornecedor, ...dados } = prod as Produto;
-                const novoProduto = await produtosService.criar(dados);
-                set((s) => ({ produtos: [novoProduto, ...s.produtos] }));
-            } catch (err) {
-                console.error('[Estoque] Erro ao criar produto:', err);
-                throw err;
-            }
+        } catch (err) {
+            console.error('[Estoque] Erro ao criar produto:', err);
+            throw err;
         }
     },
 
     atualizarProduto: async (id, dados) => {
-        const { usandoMock } = get();
-        if (usandoMock) {
+        try {
+            const prodAtualizado = await produtosService.atualizar(id, dados);
             set((s) => ({
-                produtos: s.produtos.map((p) => (p.id === id ? { ...p, ...dados, updated_at: new Date().toISOString() } : p)),
+                produtos: s.produtos.map((p) => (p.id === id ? prodAtualizado : p)),
             }));
-        } else {
-            try {
-                const prodAtualizado = await produtosService.atualizar(id, dados);
-                set((s) => ({
-                    produtos: s.produtos.map((p) => (p.id === id ? prodAtualizado : p)),
-                }));
-            } catch (err) {
-                console.error('[Estoque] Erro ao atualizar produto:', err);
-                throw err;
-            }
+        } catch (err) {
+            console.error('[Estoque] Erro ao atualizar produto:', err);
+            throw err;
         }
     },
 
     removerProduto: async (id) => {
-        const { usandoMock } = get();
-        if (usandoMock) {
+        try {
+            await produtosService.remover(id);
             set((s) => ({ produtos: s.produtos.filter((p) => p.id !== id) }));
-        } else {
-            try {
-                await produtosService.remover(id);
-                set((s) => ({ produtos: s.produtos.filter((p) => p.id !== id) }));
-            } catch (err) {
-                console.error('[Estoque] Erro ao remover produto:', err);
-                throw err;
-            }
+        } catch (err) {
+            console.error('[Estoque] Erro ao remover produto:', err);
+            throw err;
         }
     },
 

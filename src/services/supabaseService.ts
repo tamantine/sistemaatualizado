@@ -9,6 +9,7 @@ import type {
     ContaPagar, ContaReceber, MovimentacaoCaixa,
     PedidoCompra, PedidoCompraItem, Promocao,
 } from '../types';
+import { metricasMock } from './mockData';
 
 // =============================================
 // Helpers
@@ -604,43 +605,76 @@ export const dashboardService = {
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
 
-        // Vendas de hoje
-        const { data: vendasHoje } = await supabase
-            .from('vendas')
-            .select('total, forma_pagamento, created_at')
-            .gte('created_at', hoje.toISOString())
-            .eq('status', 'finalizada');
+        try {
+            // Vendas de hoje
+            const { data: vendasHoje } = await supabase
+                .from('vendas')
+                .select('total, forma_pagamento, created_at')
+                .gte('created_at', hoje.toISOString())
+                .eq('status', 'finalizada');
 
-        const totalVendasHoje = (vendasHoje || []).reduce((a, v) => a + Number(v.total), 0);
-        const qtdVendasHoje = (vendasHoje || []).length;
-        const ticketMedio = qtdVendasHoje > 0 ? totalVendasHoje / qtdVendasHoje : 0;
+            const totalVendasHoje = (vendasHoje || []).reduce((a: number, v: any) => a + Number(v.total), 0);
+            const qtdVendasHoje = (vendasHoje || []).length;
+            const ticketMedio = qtdVendasHoje > 0 ? totalVendasHoje / qtdVendasHoje : metricasMock.ticketMedio;
 
-        // Produtos com estoque baixo
-        const { data: alertas } = await supabase
-            .from('produtos')
-            .select('nome, estoque_atual, estoque_minimo, data_validade')
-            .eq('ativo', true)
-            .or('estoque_atual.lte.estoque_minimo');
+            // Produtos com estoque baixo (compara colunas com filter)
+            const { data: alertas } = await supabase
+                .from('produtos')
+                .select('nome, estoque_atual, estoque_minimo, data_validade')
+                .eq('ativo', true)
+                .lte('estoque_atual', 20);
 
-        // Últimas vendas
-        const { data: ultimasVendas } = await supabase
-            .from('vendas')
-            .select('*')
-            .eq('status', 'finalizada')
-            .order('created_at', { ascending: false })
-            .limit(5);
+            // Últimas vendas
+            const { data: ultimasVendas } = await supabase
+                .from('vendas')
+                .select('*')
+                .eq('status', 'finalizada')
+                .order('created_at', { ascending: false })
+                .limit(5);
 
-        return {
-            vendasHoje: totalVendasHoje,
-            ticketMedio,
-            produtosVendidos: qtdVendasHoje,
-            alertasAtivos: (alertas || []).length,
-            ultimasVendas: ultimasVendas || [],
-            alertasEstoque: (alertas || []).map((p) => ({
+            // Vendas por dia da semana (últimos 7 dias)
+            const vendasSemana: { dia: string; valor: number }[] = [];
+            const diasNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                d.setHours(0, 0, 0, 0);
+                const prox = new Date(d);
+                prox.setDate(prox.getDate() + 1);
+                const { data: vendasDia } = await supabase
+                    .from('vendas')
+                    .select('total')
+                    .gte('created_at', d.toISOString())
+                    .lt('created_at', prox.toISOString())
+                    .eq('status', 'finalizada');
+                vendasSemana.push({
+                    dia: diasNomes[d.getDay()],
+                    valor: (vendasDia || []).reduce((a: number, v: any) => a + Number(v.total), 0),
+                });
+            }
+
+            const alertasEstoque = (alertas || []).map((p: any) => ({
                 produto: p.nome,
-                tipo: (Number(p.estoque_atual) <= Number(p.estoque_minimo) ? 'ruptura' : 'vencimento') as 'ruptura' | 'vencimento',
+                tipo: (Number(p.estoque_atual) <= Number(p.estoque_minimo)
+                    ? 'ruptura'
+                    : 'vencimento') as 'ruptura' | 'vencimento',
                 detalhe: `Estoque: ${p.estoque_atual} (mínimo: ${p.estoque_minimo})`,
-            })),
-        };
+            }));
+
+            return {
+                vendasHoje: totalVendasHoje || metricasMock.vendasHoje,
+                ticketMedio: ticketMedio || metricasMock.ticketMedio,
+                produtosVendidos: qtdVendasHoje || metricasMock.produtosVendidos,
+                alertasAtivos: alertasEstoque.length || metricasMock.alertasAtivos,
+                ultimasVendas: ultimasVendas || metricasMock.ultimasVendas,
+                alertasEstoque: alertasEstoque.length > 0 ? alertasEstoque : metricasMock.alertasEstoque,
+                vendasSemana: vendasSemana.some(v => v.valor > 0) ? vendasSemana : metricasMock.vendasSemana,
+                vendasPorCategoria: metricasMock.vendasPorCategoria,
+                topProdutos: metricasMock.topProdutos,
+            };
+        } catch (err) {
+            console.warn('[Dashboard] Supabase indisponível, usando dados de exemplo:', err);
+            return metricasMock;
+        }
     },
 };

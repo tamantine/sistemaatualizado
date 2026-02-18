@@ -4,10 +4,9 @@
 // =============================================
 import { create } from 'zustand';
 import type { Fornecedor, PedidoCompra } from '../types';
-import { fornecedoresMock, produtosMock } from '../services/mockData';
 import { fornecedoresService, pedidosCompraService } from '../services/supabaseService';
 
-// Cotação mock
+// Cotações tipagem
 export interface Cotacao {
     id: string;
     titulo: string;
@@ -28,79 +27,6 @@ export interface CotacaoResposta {
     condicao_pagamento: string;
     data_resposta: string;
 }
-
-// Pedidos de compra mock
-const pedidosCompraMock: PedidoCompra[] = [
-    {
-        id: 'pc-1', fornecedor_id: 'forn-1', numero_pedido: 1001, status: 'recebido', valor_total: 2450.00,
-        data_previsao: '2026-02-15', data_recebimento: '2026-02-15', observacoes: 'Entrega no horário',
-        created_at: '2026-02-12', updated_at: '2026-02-15',
-        fornecedor: fornecedoresMock[0],
-        itens: [
-            { id: 'pci-1', pedido_id: 'pc-1', produto_id: 'prod-1', quantidade: 50, preco_unitario: 8.90, subtotal: 445.00, created_at: '2026-02-12', produto: produtosMock[0] },
-            { id: 'pci-2', pedido_id: 'pc-1', produto_id: 'prod-2', quantidade: 80, preco_unitario: 5.50, subtotal: 440.00, created_at: '2026-02-12', produto: produtosMock[1] },
-            { id: 'pci-3', pedido_id: 'pc-1', produto_id: 'prod-3', quantidade: 100, preco_unitario: 3.20, subtotal: 320.00, created_at: '2026-02-12', produto: produtosMock[2] },
-        ],
-    },
-    {
-        id: 'pc-2', fornecedor_id: 'forn-2', numero_pedido: 1002, status: 'aprovado', valor_total: 1890.00,
-        data_previsao: '2026-02-20', observacoes: 'Frutas da estação',
-        created_at: '2026-02-16', updated_at: '2026-02-16',
-        fornecedor: fornecedoresMock[1],
-        itens: [
-            { id: 'pci-4', pedido_id: 'pc-2', produto_id: 'prod-4', quantidade: 60, preco_unitario: 12.50, subtotal: 750.00, created_at: '2026-02-16', produto: produtosMock[3] },
-            { id: 'pci-5', pedido_id: 'pc-2', produto_id: 'prod-5', quantidade: 40, preco_unitario: 14.90, subtotal: 596.00, created_at: '2026-02-16', produto: produtosMock[4] },
-        ],
-    },
-    {
-        id: 'pc-3', fornecedor_id: 'forn-3', numero_pedido: 1003, status: 'pendente', valor_total: 3200.00,
-        data_previsao: '2026-02-22',
-        created_at: '2026-02-18', updated_at: '2026-02-18',
-        fornecedor: fornecedoresMock[2],
-        itens: [
-            { id: 'pci-6', pedido_id: 'pc-3', produto_id: 'prod-1', quantidade: 100, preco_unitario: 8.50, subtotal: 850.00, created_at: '2026-02-18', produto: produtosMock[0] },
-            { id: 'pci-7', pedido_id: 'pc-3', produto_id: 'prod-6', quantidade: 80, preco_unitario: 6.90, subtotal: 552.00, created_at: '2026-02-18', produto: produtosMock[5] },
-        ],
-    },
-    {
-        id: 'pc-4', fornecedor_id: 'forn-1', numero_pedido: 1004, status: 'recebido', valor_total: 1560.00,
-        data_previsao: '2026-02-10', data_recebimento: '2026-02-10',
-        created_at: '2026-02-07', updated_at: '2026-02-10',
-        fornecedor: fornecedoresMock[0],
-    },
-    {
-        id: 'pc-5', fornecedor_id: 'forn-2', numero_pedido: 1005, status: 'cancelado', valor_total: 780.00,
-        data_previsao: '2026-02-14', observacoes: 'Fornecedor sem estoque',
-        created_at: '2026-02-11', updated_at: '2026-02-13',
-        fornecedor: fornecedoresMock[1],
-    },
-];
-
-// Cotações mock
-const cotacoesMock: Cotacao[] = [
-    {
-        id: 'cot-1', titulo: 'Cotação Frutas Semana 08', fornecedor_ids: ['forn-1', 'forn-2', 'forn-3'],
-        itens: [
-            { produto_id: 'prod-1', quantidade: 100, produto_nome: 'Banana Prata' },
-            { produto_id: 'prod-4', quantidade: 50, produto_nome: 'Manga Tommy' },
-        ],
-        status: 'respondida', melhor_preco: 1850.00, data_limite: '2026-02-19', created_at: '2026-02-16',
-        respostas: [
-            { fornecedor_id: 'forn-1', fornecedor_nome: 'Sítio Boa Vista', valor_total: 1850.00, prazo_entrega: '2 dias', condicao_pagamento: '30 dias', data_resposta: '2026-02-17' },
-            { fornecedor_id: 'forn-2', fornecedor_nome: 'Distribuidora Frutas Brasil', valor_total: 2100.00, prazo_entrega: '1 dia', condicao_pagamento: '15 dias', data_resposta: '2026-02-17' },
-            { fornecedor_id: 'forn-3', fornecedor_nome: 'Ceasa Central', valor_total: 1920.00, prazo_entrega: '3 dias', condicao_pagamento: '7 dias', data_resposta: '2026-02-18' },
-        ],
-    },
-    {
-        id: 'cot-2', titulo: 'Cotação Verduras/Legumes', fornecedor_ids: ['forn-1', 'forn-3'],
-        itens: [
-            { produto_id: 'prod-2', quantidade: 80, produto_nome: 'Tomate Italiano' },
-            { produto_id: 'prod-3', quantidade: 120, produto_nome: 'Alface Crespa' },
-            { produto_id: 'prod-6', quantidade: 60, produto_nome: 'Cebola Roxa' },
-        ],
-        status: 'aberta', data_limite: '2026-02-21', created_at: '2026-02-18',
-    },
-];
 
 type AbaCompras = 'pedidos' | 'fornecedores' | 'cotacoes';
 
@@ -157,19 +83,19 @@ interface ComprasState {
 
 export const useComprasStore = create<ComprasState>((set, get) => ({
     abaAtiva: 'pedidos',
-    pedidos: pedidosCompraMock,
+    pedidos: [],
     buscaPedido: '',
     filtroPedido: 'todos',
     pedidoSelecionado: null,
     modalPedido: false,
-    fornecedores: fornecedoresMock,
+    fornecedores: [],
     buscaFornecedor: '',
     fornecedorSelecionado: null,
     modalFornecedor: false,
-    cotacoes: cotacoesMock,
+    cotacoes: [],
     cotacaoSelecionada: null,
     modalCotacao: false,
-    usandoMock: true,
+    usandoMock: false,
 
     carregarDados: async () => {
         try {
@@ -177,10 +103,11 @@ export const useComprasStore = create<ComprasState>((set, get) => ({
                 fornecedoresService.listar(),
                 pedidosCompraService.listar(),
             ]);
-            set({ fornecedores, pedidos, usandoMock: false });
-        } catch {
-            console.warn('[Compras] Supabase indisponível, usando mock');
-            set({ usandoMock: true });
+            set({ fornecedores, pedidos });
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Erro ao carregar dados de compras';
+            console.error('[Compras] Erro ao carregar dados do Supabase (usando dados vazios):', message);
+            // Não lança exceção: mantém arrays vazios para não quebrar a UI
         }
     },
 

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
 import { DollarSign, ShoppingCart, Package, AlertTriangle, TrendingUp, TrendingDown, ArrowUpRight, Clock } from "lucide-react";
 import { dashboardService } from "../services/supabaseService";
-import { metricasMock } from "../services/mockData";
 import { formatarMoeda, formatarDataHora } from "../utils/formatters";
 import type { MetricasDashboard } from "../types";
 
@@ -43,16 +42,20 @@ function TooltipCustomizado({ active, payload, label }: any) {
 }
 
 export default function Dashboard() {
-    const [dados, setDados] = useState<MetricasDashboard>(metricasMock);
+    const [dados, setDados] = useState<MetricasDashboard | null>(null);
     const [carregando, setCarregando] = useState(true);
+    const [erro, setErro] = useState<string | null>(null);
 
     useEffect(() => {
         async function carregarDados() {
             try {
+                setErro(null);
                 const metricasReais = await dashboardService.obterMetricas();
-                setDados({ ...metricasMock, ...metricasReais as any });
+                setDados(metricasReais as any);
             } catch (error) {
+                const mensagem = error instanceof Error ? error.message : 'Erro ao carregar métricas';
                 console.error("Erro ao carregar métricas:", error);
+                setErro(`Falha ao carregar dados: ${mensagem}`);
             } finally {
                 setCarregando(false);
             }
@@ -64,6 +67,24 @@ export default function Dashboard() {
         return (
             <div className="flex items-center justify-center h-[60vh]">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+            </div>
+        );
+    }
+
+    if (erro || !dados) {
+        return (
+            <div className="flex items-center justify-center h-[60vh] flex-col gap-4">
+                <div className="text-center">
+                    <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-2" />
+                    <h2 className="text-xl font-bold text-surface-200">Erro ao carregar Dashboard</h2>
+                    <p className="text-surface-400 mt-2">{erro || 'Nenhum dado disponível'}</p>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="mt-4 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-500 transition-colors"
+                    >
+                        Tentar Novamente
+                    </button>
+                </div>
             </div>
         );
     }

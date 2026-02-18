@@ -1,16 +1,16 @@
 // =============================================
 // Página: Login - Acesso ao Sistema
-// Autenticação com Supabase
+// Autenticação com Supabase + Modo Demo
 // =============================================
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { useAppStore } from '../store/useAppStore';
-import { Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
+import { Lock, Mail, Loader2, ArrowRight, Zap } from 'lucide-react';
 
 export default function Login() {
     const navigate = useNavigate();
-    const { signIn, loading, user } = useAuthStore();
+    const { signIn, demoLogin, loading, user } = useAuthStore();
     const { adicionarToast } = useAppStore();
 
     const [email, setEmail] = useState('');
@@ -19,7 +19,7 @@ export default function Login() {
 
     // Redireciona se já estiver logado
     useEffect(() => {
-        if (user) navigate('/');
+        if (user) navigate('/', { replace: true });
     }, [user, navigate]);
 
     async function handleLogin(e: React.FormEvent) {
@@ -34,13 +34,17 @@ export default function Login() {
                 titulo: 'Erro ao entrar',
                 mensagem: error.message === 'Invalid login credentials'
                     ? 'Credenciais inválidas. Verifique seu e-mail e senha.'
-                    : error.message
+                    : error.message || 'Erro desconhecido ao fazer login.',
             });
             setIsSubmitting(false);
         } else {
             navigate('/', { replace: true });
-            // Não precisa setar loading false aqui pois redireciona
         }
+    }
+
+    function handleDemoLogin() {
+        demoLogin();
+        navigate('/', { replace: true });
     }
 
     return (
@@ -112,9 +116,39 @@ export default function Login() {
                         </button>
                     </form>
 
+                    {/* Separador */}
+                    <div className="flex items-center gap-3 my-6">
+                        <div className="flex-1 h-px bg-surface-700/50" />
+                        <span className="text-xs text-surface-500 font-medium">ou</span>
+                        <div className="flex-1 h-px bg-surface-700/50" />
+                    </div>
+
+                    {/* Botão Demo */}
+                    <button
+                        type="button"
+                        onClick={handleDemoLogin}
+                        className="w-full group flex items-center justify-center gap-2 bg-surface-800 hover:bg-surface-700 border border-surface-600 hover:border-accent-500/50 text-surface-200 hover:text-accent-400 font-semibold py-3.5 px-4 rounded-xl transition-all duration-300 transform hover:-translate-y-0.5"
+                    >
+                        <Zap className="w-5 h-5 text-accent-400 group-hover:scale-110 transition-transform" />
+                        <span>Entrar como Demo</span>
+                        <span className="text-xs bg-accent-500/20 text-accent-400 px-2 py-0.5 rounded-full font-normal">
+                            sem cadastro
+                        </span>
+                    </button>
+
+                    <div className="mt-4 p-3 bg-accent-500/10 border border-accent-500/20 rounded-xl">
+                        <p className="text-xs text-accent-300 text-center">
+                            🚀 <strong>Modo Demo</strong> — Explore todas as funcionalidades com dados de exemplo.
+                            Nenhum dado real é alterado.
+                        </p>
+                    </div>
+
                     <div className="mt-6 pt-6 border-t border-surface-700/50 text-center">
                         <p className="text-xs text-surface-500">
-                            Problemas para acessar? <a href="#" className="text-brand-400 hover:text-brand-300 transition-colors font-medium">Contate o suporte</a>
+                            Problemas para acessar?{' '}
+                            <a href="#" className="text-brand-400 hover:text-brand-300 transition-colors font-medium">
+                                Contate o suporte
+                            </a>
                         </p>
                     </div>
                 </div>
@@ -122,7 +156,7 @@ export default function Login() {
                 {/* Footer */}
                 <div className="mt-8 text-center">
                     <p className="text-xs text-surface-600 font-medium tracking-wide opacity-60">
-                        &copy; {new Date().getFullYear()} Sistema Integrado • v1.0.0
+                        &copy; {new Date().getFullYear()} Hortifruti Master • v1.0.0
                     </p>
                 </div>
             </div>

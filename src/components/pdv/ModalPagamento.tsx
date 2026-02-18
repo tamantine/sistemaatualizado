@@ -29,7 +29,7 @@ const formasPagamento: { id: FormaPgto; label: string; icone: React.ElementType;
 ];
 
 export default function ModalPagamento() {
-    const { modalPagamento, setModalPagamento, total, limparCarrinho, itens, caixa } = usePDVStore();
+    const { modalPagamento, setModalPagamento, total, limparCarrinho, itens, caixa, registrarVenda } = usePDVStore();
     const { adicionarToast } = useAppStore();
     const totalVenda = total();
 
@@ -50,31 +50,28 @@ export default function ModalPagamento() {
     const restante = totalVenda - totalPago;
 
     // Finalizar venda simples
-    const finalizarSimples = () => {
+    const finalizarSimples = async () => {
         if (formaSelecionada === 'dinheiro' && valorRec < totalVenda) {
             adicionarToast({ tipo: 'erro', titulo: 'Valor insuficiente', mensagem: `Faltam ${formatarMoeda(totalVenda - valorRec)}` });
             return;
         }
 
-        // Atualiza o caixa
-        if (caixa) {
-            const caixaAtualizado = { ...caixa };
-            caixaAtualizado.total_vendas += 1;
-            if (formaSelecionada === 'dinheiro') caixaAtualizado.valor_dinheiro += totalVenda;
-            if (formaSelecionada === 'debito') caixaAtualizado.valor_cartao_debito += totalVenda;
-            if (formaSelecionada === 'credito') caixaAtualizado.valor_cartao_credito += totalVenda;
-            if (formaSelecionada === 'pix') caixaAtualizado.valor_pix += totalVenda;
+        try {
+            // Registrar venda no Supabase e atualizar caixa
+            await registrarVenda(formaSelecionada, valorRec, troco);
+
+            adicionarToast({
+                tipo: 'sucesso',
+                titulo: 'Venda finalizada!',
+                mensagem: `${formatarMoeda(totalVenda)} — ${formaSelecionada.toUpperCase()}${troco > 0 ? ` | Troco: ${formatarMoeda(troco)}` : ''}`,
+            });
+
+            setModalPagamento(false);
+            resetarEstado();
+        } catch (err) {
+            adicionarToast({ tipo: 'erro', titulo: 'Erro ao finalizar venda', mensagem: 'Verifique sua conexão' });
+            console.error('[ModalPagamento] Erro:', err);
         }
-
-        adicionarToast({
-            tipo: 'sucesso',
-            titulo: 'Venda finalizada!',
-            mensagem: `${formatarMoeda(totalVenda)} — ${formaSelecionada.toUpperCase()}${troco > 0 ? ` | Troco: ${formatarMoeda(troco)}` : ''}`,
-        });
-
-        limparCarrinho();
-        setModalPagamento(false);
-        resetarEstado();
     };
 
     // Adicionar pagamento parcial
@@ -97,21 +94,32 @@ export default function ModalPagamento() {
     };
 
     // Finalizar venda múltipla
-    const finalizarMultiplo = () => {
+    const finalizarMultiplo = async () => {
         if (restante > 0.01) {
             adicionarToast({ tipo: 'erro', titulo: `Faltam ${formatarMoeda(restante)}` });
             return;
         }
 
-        adicionarToast({
-            tipo: 'sucesso',
-            titulo: 'Venda finalizada!',
-            mensagem: `${formatarMoeda(totalVenda)} — Pagamento múltiplo (${pagamentos.length} formas)`,
-        });
+        try {
+            // Registrar venda com múltiplas formas de pagamento
+            const pagamentosFormatados = pagamentos.map(p => ({
+                forma_pagamento: p.forma as 'dinheiro' | 'debito' | 'credito' | 'pix',
+                valor: p.valor
+            }));
+            await registrarVenda('multiplo', totalVenda, 0, pagamentosFormatados);
 
-        limparCarrinho();
-        setModalPagamento(false);
-        resetarEstado();
+            adicionarToast({
+                tipo: 'sucesso',
+                titulo: 'Venda finalizada!',
+                mensagem: `${formatarMoeda(totalVenda)} — Pagamento múltiplo (${pagamentos.length} formas)`,
+            });
+
+            setModalPagamento(false);
+            resetarEstado();
+        } catch (err) {
+            adicionarToast({ tipo: 'erro', titulo: 'Erro ao finalizar venda', mensagem: 'Verifique sua conexão' });
+            console.error('[ModalPagamento] Erro:', err);
+        }
     };
 
     const resetarEstado = () => {
