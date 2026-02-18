@@ -13,6 +13,14 @@ interface ProdutoFormProps {
     onCancelar: () => void;
 }
 
+// Componente Campo movido para fora para evitar perda de foco durante a digitação
+const Campo = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <div className="space-y-1.5">
+        <label className="text-sm font-medium text-surface-300">{label}</label>
+        {children}
+    </div>
+);
+
 export default function ProdutoForm({ produto, categorias, onSalvar, onCancelar }: ProdutoFormProps) {
     const { adicionarToast } = useAppStore();
     const [form, setForm] = useState({
@@ -68,13 +76,7 @@ export default function ProdutoForm({ produto, categorias, onSalvar, onCancelar 
         setForm((prev) => ({ ...prev, [campo]: valor }));
     };
 
-    // Campo reutilizável
-    const Campo = ({ label, children }: { label: string; children: React.ReactNode }) => (
-        <div className="space-y-1.5">
-            <label className="text-sm font-medium text-surface-300">{label}</label>
-            {children}
-        </div>
-    );
+
 
     const inputClass = "w-full bg-surface-700/50 border border-surface-600 rounded-xl px-3 py-2.5 text-sm text-surface-100 placeholder:text-surface-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all";
 
