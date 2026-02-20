@@ -21,14 +21,46 @@ const Campo = ({ label, children }: { label: string; children: React.ReactNode }
     </div>
 );
 
-export default function ProdutoForm({ produto, categorias, onSalvar, onCancelar }: ProdutoFormProps) {
-    const { adicionarToast } = useAppStore();
-    const [form, setForm] = useState({
+// Tipos para o formulário
+interface FormData {
+    nome: string;
+    codigo: string;
+    codigo_barras: string;
+    categoria_id: string;
+    unidade: Produto['unidade'];
+    preco_custo: number;
+    preco_venda: number;
+    estoque_atual: number;
+    estoque_minimo: number;
+    data_validade: string;
+    lote: string;
+    localizacao: string;
+}
+
+// Função para gerar estado inicial
+function getInitialForm(produto: Produto | null | undefined): FormData {
+    if (produto) {
+        return {
+            nome: produto.nome,
+            codigo: produto.codigo || '',
+            codigo_barras: produto.codigo_barras || '',
+            categoria_id: produto.categoria_id || '',
+            unidade: produto.unidade,
+            preco_custo: produto.preco_custo,
+            preco_venda: produto.preco_venda,
+            estoque_atual: produto.estoque_atual,
+            estoque_minimo: produto.estoque_minimo,
+            data_validade: produto.data_validade || '',
+            lote: produto.lote || '',
+            localizacao: produto.localizacao || '',
+        };
+    }
+    return {
         nome: '',
         codigo: '',
         codigo_barras: '',
         categoria_id: '',
-        unidade: 'KG' as Produto['unidade'],
+        unidade: 'KG',
         preco_custo: 0,
         preco_venda: 0,
         estoque_atual: 0,
@@ -36,27 +68,17 @@ export default function ProdutoForm({ produto, categorias, onSalvar, onCancelar 
         data_validade: '',
         lote: '',
         localizacao: '',
-    });
+    };
+}
 
-    // Preenche formulário se for edição
+export default function ProdutoForm({ produto, categorias, onSalvar, onCancelar }: ProdutoFormProps) {
+    const { adicionarToast } = useAppStore();
+    const [form, setForm] = useState<FormData>(() => getInitialForm(produto));
+
+    // Atualiza o formulário quando o produto mudar (para modo edição)
     useEffect(() => {
-        if (produto) {
-            setForm({
-                nome: produto.nome,
-                codigo: produto.codigo || '',
-                codigo_barras: produto.codigo_barras || '',
-                categoria_id: produto.categoria_id || '',
-                unidade: produto.unidade,
-                preco_custo: produto.preco_custo,
-                preco_venda: produto.preco_venda,
-                estoque_atual: produto.estoque_atual,
-                estoque_minimo: produto.estoque_minimo,
-                data_validade: produto.data_validade || '',
-                lote: produto.lote || '',
-                localizacao: produto.localizacao || '',
-            });
-        }
-    }, [produto]);
+        setForm(getInitialForm(produto));
+    }, [produto?.id]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -72,7 +94,7 @@ export default function ProdutoForm({ produto, categorias, onSalvar, onCancelar 
         onSalvar(form);
     };
 
-    const handleChange = (campo: string, valor: any) => {
+    const handleChange = (campo: keyof FormData, valor: string | number) => {
         setForm((prev) => ({ ...prev, [campo]: valor }));
     };
 

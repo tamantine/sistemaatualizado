@@ -36,6 +36,7 @@ const impressoraService = new ImpressoraService({
 });
 
 // Expõe os serviços para uso externo (ex: imprimir após venda)
+// eslint-disable-next-line react-refresh/only-export-components
 export { balancaService, impressoraService };
 
 // =============================================
@@ -144,9 +145,10 @@ export default function ModalDispositivos({ aberto, onFechar }: Props) {
             setBalancaConectada(true);
             localStorage.setItem(STORAGE_KEY_BALANCA_PROTOCOLO, protocoloBalanca);
             adicionarToast({ tipo: 'sucesso', titulo: '⚖️ Balança conectada', mensagem: `Protocolo ${protocoloBalanca}` });
-        } catch (err: any) {
-            setErroBalanca(err.message);
-            adicionarToast({ tipo: 'erro', titulo: 'Erro ao conectar balança', mensagem: err.message });
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Erro desconhecido';
+            setErroBalanca(message);
+            adicionarToast({ tipo: 'erro', titulo: 'Erro ao conectar balança', mensagem: message });
         } finally {
             setConectandoBalanca(false);
         }
@@ -176,9 +178,10 @@ export default function ModalDispositivos({ aberto, onFechar }: Props) {
             await impressoraService.conectarUSB();
             setImpressoraConectada(true);
             adicionarToast({ tipo: 'sucesso', titulo: '🖨️ Impressora USB conectada' });
-        } catch (err: any) {
-            setErroImpressora(err.message);
-            adicionarToast({ tipo: 'erro', titulo: 'Erro ao conectar impressora', mensagem: err.message });
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Erro desconhecido';
+            setErroImpressora(message);
+            adicionarToast({ tipo: 'erro', titulo: 'Erro ao conectar impressora', mensagem: message });
         } finally {
             setConectandoImpressora(false);
         }
@@ -192,9 +195,10 @@ export default function ModalDispositivos({ aberto, onFechar }: Props) {
             await impressoraService.conectarSerial();
             setImpressoraConectada(true);
             adicionarToast({ tipo: 'sucesso', titulo: '🖨️ Impressora Serial conectada' });
-        } catch (err: any) {
-            setErroImpressora(err.message);
-            adicionarToast({ tipo: 'erro', titulo: 'Erro ao conectar impressora', mensagem: err.message });
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Erro desconhecido';
+            setErroImpressora(message);
+            adicionarToast({ tipo: 'erro', titulo: 'Erro ao conectar impressora', mensagem: message });
         } finally {
             setConectandoImpressora(false);
         }
@@ -211,8 +215,9 @@ export default function ModalDispositivos({ aberto, onFechar }: Props) {
         try {
             await impressoraService.testar();
             adicionarToast({ tipo: 'sucesso', titulo: 'Teste enviado com sucesso!' });
-        } catch (err: any) {
-            adicionarToast({ tipo: 'erro', titulo: 'Erro no teste', mensagem: err.message });
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Erro desconhecido';
+            adicionarToast({ tipo: 'erro', titulo: 'Erro no teste', mensagem: message });
         } finally {
             setTestando(false);
         }

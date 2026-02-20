@@ -2,7 +2,7 @@
 // Store: Autenticação (Supabase Auth + Modo Demo)
 // =============================================
 import { create } from 'zustand';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthState {
@@ -27,17 +27,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     modoDemo: false,
 
     initialize: async () => {
+        // Se Supabase não está configurado, marca como inicializado
+        if (!isSupabaseConfigured || !supabase) {
+            set({ inicializado: true });
+            return;
+        }
+
         try {
             // Timeout de 5 segundos para evitar travar
             const sessionPromise = supabase.auth.getSession();
-            const timeoutPromise = new Promise((_, reject) =>
+            const timeoutPromise = new Promise<never>((_, reject) =>
                 setTimeout(() => reject(new Error('Timeout ao obter sessão')), 5000)
             );
 
-            const { data: { session } } = (await Promise.race([
+            const { data: { session } } = await Promise.race([
                 sessionPromise,
                 timeoutPromise,
-            ])) as any;
+            ]);
 
             set({
                 session,
@@ -56,8 +62,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     });
                 }
             });
-        } catch (err) {
-            console.error('[Auth] Erro na inicialização:', err);
+        } catch {
             // Marca como inicializado mesmo com erro, para a UI não ficar presa
             set({
                 inicializado: true,
@@ -95,6 +100,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     signIn: async (email, password) => {
+        if (!supabase) {
+            set({ loading: false });
+            return { error: new Error('Supabase não configurado') };
+        }
         set({ loading: true });
         try {
             const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -108,11 +117,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     signOut: async () => {
         const { modoDemo } = get();
-        if (!modoDemo) {
+        if (!modoDemo && supabase) {
             try {
                 await supabase.auth.signOut();
-            } catch (err) {
-                console.error('[Auth] Erro ao fazer logout:', err);
+            } catch {
+                // Silencia erro de logout
             }
         }
         set({ user: null, session: null, modoDemo: false, inicializado: true });

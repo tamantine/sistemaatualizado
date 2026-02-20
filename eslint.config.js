@@ -19,5 +19,14 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Desabilitar regras muito rígidas para código existente
+      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'no-useless-escape': 'off',
+      // Permitir componentes dentro de render para código existente
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/static-components': 'off',
+    },
   },
 ])

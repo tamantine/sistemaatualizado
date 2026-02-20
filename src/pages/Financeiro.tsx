@@ -397,27 +397,37 @@ function FluxoCaixa() {
 }
 
 // =============================================
+// Componente: Linha DRE (movido para fora para evitar re-criação)
+// =============================================
+interface LinhaDREProps {
+    label: string;
+    valor: number;
+    destaque?: boolean;
+    negativo?: boolean;
+    indent?: boolean;
+    bold?: boolean;
+}
+
+function LinhaDRE({ label, valor, destaque, negativo, indent, bold }: LinhaDREProps) {
+    return (
+        <div className={`flex items-center justify-between py-2.5 px-4 ${destaque ? 'bg-surface-700/30 rounded-xl' : 'border-b border-surface-700/20'}`}>
+            <span className={`text-sm ${indent ? 'pl-6 text-surface-400' : bold ? 'font-bold text-surface-100' : 'text-surface-300'}`}>
+                {label}
+            </span>
+            <span className={`text-sm font-semibold ${negativo ? 'text-red-400' : destaque ? 'text-brand-400 font-bold text-base' : 'text-surface-200'}`}>
+                {negativo ? `(${formatarMoeda(Math.abs(valor))})` : formatarMoeda(valor)}
+            </span>
+        </div>
+    );
+}
+
+// =============================================
 // Aba: DRE (Demonstrativo de Resultado)
 // =============================================
 function DRE() {
     const d = dreMock;
     const margemBruta = ((d.lucro_bruto / d.receita_liquida) * 100).toFixed(1);
     const margemLiquida = ((d.lucro_liquido / d.receita_liquida) * 100).toFixed(1);
-
-    function Linha({ label, valor, destaque, negativo, indent, bold }: {
-        label: string; valor: number; destaque?: boolean; negativo?: boolean; indent?: boolean; bold?: boolean;
-    }) {
-        return (
-            <div className={`flex items-center justify-between py-2.5 px-4 ${destaque ? 'bg-surface-700/30 rounded-xl' : 'border-b border-surface-700/20'}`}>
-                <span className={`text-sm ${indent ? 'pl-6 text-surface-400' : bold ? 'font-bold text-surface-100' : 'text-surface-300'}`}>
-                    {label}
-                </span>
-                <span className={`text-sm font-semibold ${negativo ? 'text-red-400' : destaque ? 'text-brand-400 font-bold text-base' : 'text-surface-200'}`}>
-                    {negativo ? `(${formatarMoeda(Math.abs(valor))})` : formatarMoeda(valor)}
-                </span>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -435,31 +445,31 @@ function DRE() {
                     <p className="text-xs text-surface-500 mt-0.5">Demonstrativo de Resultado do Exercício</p>
                 </div>
                 <div className="divide-y-0">
-                    <Linha label="Receita Bruta de Vendas" valor={d.receita_bruta} bold />
-                    <Linha label="(-) Deduções (impostos sobre vendas)" valor={d.deducoes} negativo indent />
-                    <Linha label="= Receita Líquida" valor={d.receita_liquida} destaque />
+                    <LinhaDRE label="Receita Bruta de Vendas" valor={d.receita_bruta} bold />
+                    <LinhaDRE label="(-) Deduções (impostos sobre vendas)" valor={d.deducoes} negativo indent />
+                    <LinhaDRE label="= Receita Líquida" valor={d.receita_liquida} destaque />
 
-                    <Linha label="(-) Custo da Mercadoria Vendida (CMV)" valor={d.cmv} negativo indent />
-                    <Linha label="= Lucro Bruto" valor={d.lucro_bruto} destaque />
+                    <LinhaDRE label="(-) Custo da Mercadoria Vendida (CMV)" valor={d.cmv} negativo indent />
+                    <LinhaDRE label="= Lucro Bruto" valor={d.lucro_bruto} destaque />
 
                     <div className="px-4 pt-3 pb-1">
                         <p className="text-xs font-semibold text-surface-400 uppercase tracking-wider">Despesas Operacionais</p>
                     </div>
-                    <Linha label="Pessoal" valor={d.despesas_operacionais.pessoal} negativo indent />
-                    <Linha label="Aluguel" valor={d.despesas_operacionais.aluguel} negativo indent />
-                    <Linha label="Utilidades (água, luz, internet)" valor={d.despesas_operacionais.utilidades} negativo indent />
-                    <Linha label="Marketing" valor={d.despesas_operacionais.marketing} negativo indent />
-                    <Linha label="Manutenção" valor={d.despesas_operacionais.manutencao} negativo indent />
-                    <Linha label="Outros" valor={d.despesas_operacionais.outros} negativo indent />
-                    <Linha label="(-) Total Despesas Operacionais" valor={d.total_despesas_op} negativo bold />
+                    <LinhaDRE label="Pessoal" valor={d.despesas_operacionais.pessoal} negativo indent />
+                    <LinhaDRE label="Aluguel" valor={d.despesas_operacionais.aluguel} negativo indent />
+                    <LinhaDRE label="Utilidades (água, luz, internet)" valor={d.despesas_operacionais.utilidades} negativo indent />
+                    <LinhaDRE label="Marketing" valor={d.despesas_operacionais.marketing} negativo indent />
+                    <LinhaDRE label="Manutenção" valor={d.despesas_operacionais.manutencao} negativo indent />
+                    <LinhaDRE label="Outros" valor={d.despesas_operacionais.outros} negativo indent />
+                    <LinhaDRE label="(-) Total Despesas Operacionais" valor={d.total_despesas_op} negativo bold />
 
-                    <Linha label="= Resultado Operacional" valor={d.resultado_operacional} destaque />
+                    <LinhaDRE label="= Resultado Operacional" valor={d.resultado_operacional} destaque />
 
-                    <Linha label="(-) Despesas Financeiras" valor={d.despesas_financeiras} negativo indent />
-                    <Linha label="(+) Receitas Financeiras" valor={d.receitas_financeiras} indent />
-                    <Linha label="= Resultado Antes do IR/CSLL" valor={d.resultado_antes_ir} destaque />
+                    <LinhaDRE label="(-) Despesas Financeiras" valor={d.despesas_financeiras} negativo indent />
+                    <LinhaDRE label="(+) Receitas Financeiras" valor={d.receitas_financeiras} indent />
+                    <LinhaDRE label="= Resultado Antes do IR/CSLL" valor={d.resultado_antes_ir} destaque />
 
-                    <Linha label="(-) IR e CSLL" valor={d.ir_csll} negativo indent />
+                    <LinhaDRE label="(-) IR e CSLL" valor={d.ir_csll} negativo indent />
 
                     <div className={`flex items-center justify-between py-4 px-4 rounded-xl mx-2 mb-2 mt-2 ${d.lucro_liquido >= 0 ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
                         <span className="text-base font-bold text-surface-100">= Lucro Líquido</span>

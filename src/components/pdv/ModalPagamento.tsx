@@ -29,7 +29,7 @@ const formasPagamento: { id: FormaPgto; label: string; icone: React.ElementType;
 ];
 
 export default function ModalPagamento() {
-    const { modalPagamento, setModalPagamento, total, limparCarrinho, itens, caixa, registrarVenda } = usePDVStore();
+    const { modalPagamento, setModalPagamento, total, itens, registrarVenda } = usePDVStore();
     const { adicionarToast } = useAppStore();
     const totalVenda = total();
 

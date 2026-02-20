@@ -1,73 +1,94 @@
-# React + TypeScript + Vite
+# Sistema Hortifruti PDV
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema de gestão para hortifruti com PDV, estoque, financeiro e mais.
 
-Currently, two official plugins are available:
+## 🚀 Quick Start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+# Instalar dependências
+npm install
 
-## React Compiler
+# Criar arquivo .env baseado no exemplo
+cp .env.example .env.local
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Iniciar desenvolvimento
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🔧 Configuração do Supabase
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 1. Criar projeto no Supabase
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Acesse [supabase.com](https://supabase.com)
+2. Crie um novo projeto
+3. Anote as credenciais:
+   - **Project URL**: Configurações → API → Project URL
+   - **anon public key**: Configurações → API → Project API keys → `anon` key
+
+### 2. Configurar variáveis de ambiente
+
+Edite o arquivo `.env.local`:
+
+```env
+VITE_SUPABASE_URL=https://seu-projeto.supabase.co
+VITE_SUPABASE_ANON_KEY=sua-chave-aqui
 ```
+
+### 3. Executar migrações (SQL)
+
+No painel do Supabase, vá em **SQL Editor** e execute o script de banco de dados disponível em `supabase/schema.sql` (se existir).
+
+## 📦 Modo Demo (sem Supabase)
+
+O sistema funciona sem Supabase! Quando as variáveis de ambiente não estão configuradas:
+
+- Sistema inicia em **modo demo**
+- Usuários podem fazer login com conta demo
+- Dados são armazenados localmente (em memória)
+
+Para entrar em modo demo, clique em "Entrar com Demo" na tela de login.
+
+## 🛠️ Comandos
+
+```bash
+# Desenvolvimento
+npm run dev
+
+# Build de produção
+npm run build
+
+# Verificar erros ESLint
+npm run lint
+
+# Preview do build
+npm run preview
+```
+
+## 📁 Estrutura
+
+```
+src/
+├── components/     # Componentes React
+├── pages/         # Páginas principais
+├── store/         # Estado global (Zustand)
+├── services/      # Serviços (Supabase, dispositivos)
+├── lib/          # Configurações (Supabase)
+├── hooks/         # Hooks personalizados
+├── types/         # Tipos TypeScript
+└── utils/         # Utilitários
+```
+
+## 🔨 Build Otimizado
+
+O projeto já está configurado com code-splitting:
+
+- React + Router em chunk separado
+- Lucide Icons em chunk separado
+- Recharts (gráficos) em chunk separado
+- Supabase em chunk separado
+
+Isso melhora significativamente o tempo de carregamento inicial.
+
+## 📄 Licença
+
+MIT

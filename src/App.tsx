@@ -30,10 +30,7 @@ function App() {
   const { initialize } = useAuthStore();
 
   useEffect(() => {
-    console.log('[App] Inicializando autenticação...');
-    initialize().catch(err => {
-      console.error('[App] Erro ao inicializar:', err);
-    });
+    initialize();
   }, [initialize]);
 
   return (

@@ -27,12 +27,24 @@ function CardMetrica({ titulo, valor, icone: Icone, cor, variacao }: { titulo: s
     );
 }
 
-function TooltipCustomizado({ active, payload, label }: any) {
+interface TooltipPayload {
+    color: string;
+    value: number;
+    name: string;
+}
+
+interface TooltipProps {
+    active?: boolean;
+    payload?: TooltipPayload[];
+    label?: string;
+}
+
+function TooltipCustomizado({ active, payload, label }: TooltipProps) {
     if (!active || !payload?.length) return null;
     return (
         <div className="glass rounded-lg px-3 py-2 text-sm">
             <p className="text-surface-300 font-medium">{label}</p>
-            {payload.map((p: any, i: number) => (
+            {payload.map((p, i) => (
                 <p key={i} style={{ color: p.color }} className="font-semibold">
                     {formatarMoeda(p.value)}
                 </p>
@@ -51,7 +63,7 @@ export default function Dashboard() {
             try {
                 setErro(null);
                 const metricasReais = await dashboardService.obterMetricas();
-                setDados(metricasReais as any);
+                setDados(metricasReais as MetricasDashboard);
             } catch (error) {
                 const mensagem = error instanceof Error ? error.message : 'Erro ao carregar métricas';
                 console.error("Erro ao carregar métricas:", error);
