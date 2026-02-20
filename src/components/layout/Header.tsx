@@ -5,6 +5,7 @@ import { useLocation } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import { Menu, Bell, Search } from 'lucide-react';
 import { useState } from 'react';
+import SupabaseStatus from '../ui/SupabaseStatus';
 
 // Mapa de títulos por rota
 const titulosRota: Record<string, string> = {
@@ -68,6 +69,9 @@ export default function Header() {
                         <Search size={20} />
                     </button>
                 )}
+
+                {/* Status Supabase */}
+                <SupabaseStatus />
 
                 {/* Notificações */}
                 <button className="relative p-2 rounded-lg text-surface-400 hover:text-surface-200 hover:bg-surface-800 transition-colors">
