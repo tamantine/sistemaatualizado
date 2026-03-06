@@ -17,7 +17,7 @@ import ToastContainer from '../components/ui/Toast';
 import { formatarMoeda, formatarDataHora } from '../utils/formatters';
 import {
     Monitor, DollarSign, CreditCard, QrCode,
-    ArrowRightLeft, Clock, LogOut, Minimize,
+    ArrowRightLeft, Clock, LogOut, Minimize, Maximize,
     Banknote, Settings,
 } from 'lucide-react';
 
@@ -97,12 +97,24 @@ export default function PDVStandalone() {
         return () => window.removeEventListener('keydown', handler);
     }, [caixaAberto, itens, setModalPagamento, setModalEspera, setModalSangria, salvarEmEspera, limparCarrinho, adicionarToast]);
 
-    const sairFullscreen = () => {
-        // Apenas sai do fullscreen - NÃO fecha a aba
-        if (document.fullscreenElement) {
-            document.exitFullscreen().catch(() => {});
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
+
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            }
         }
-        // Removido window.close() que causava fechamento da aba
     };
 
     // Se caixa não está aberto, mostra tela de abertura
@@ -183,11 +195,11 @@ export default function PDVStandalone() {
                     </button>
 
                     <button
-                        onClick={sairFullscreen}
+                        onClick={toggleFullscreen}
                         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-surface-400 hover:text-surface-200 hover:bg-surface-700 transition-colors"
-                        title="Sair da tela cheia"
+                        title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}
                     >
-                        <Minimize size={13} />
+                        {isFullscreen ? <Minimize size={13} /> : <Maximize size={13} />}
                     </button>
 
                     <button
