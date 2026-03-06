@@ -19,6 +19,7 @@ import {
     X,
     ChevronLeft,
     LogOut,
+    Wand2,
 } from 'lucide-react';
 
 // Itens do menu
@@ -30,7 +31,7 @@ const menuItens = [
     { path: '/financeiro', label: 'Financeiro', icone: DollarSign },
     { path: '/fornecedores', label: 'Fornecedores', icone: ShoppingBag },
     { path: '/relatorios', label: 'Relatórios', icone: BarChart3 },
-    { path: '/fiscal', label: 'Fiscal', icone: FileText },
+    { path: '/encartes', label: 'Encartes IA', icone: Wand2 },
     { path: '/hortifruti', label: 'Hortifruti', icone: Leaf },
 ];
 
