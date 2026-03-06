@@ -29,7 +29,6 @@ const menuItens = [
     { path: '/clientes', label: 'Clientes', icone: Users },
     { path: '/financeiro', label: 'Financeiro', icone: DollarSign },
     { path: '/compras', label: 'Compras', icone: Truck },
-    { path: '/promocoes', label: 'Promoções', icone: Tag },
     { path: '/fornecedores', label: 'Fornecedores', icone: ShoppingBag },
     { path: '/relatorios', label: 'Relatórios', icone: BarChart3 },
     { path: '/fiscal', label: 'Fiscal', icone: FileText },

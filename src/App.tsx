@@ -63,7 +63,6 @@ function App() {
             <Route path="/clientes" element={<CRM />} />
             <Route path="/financeiro" element={<Financeiro />} />
             <Route path="/compras" element={<Compras />} />
-            <Route path="/promocoes" element={<CRM />} />
             <Route path="/fornecedores" element={<Compras />} />
             <Route path="/relatorios" element={<Relatorios />} />
             <Route path="/fiscal" element={<EmBreve titulo="Fiscal & Tributário" />} />
