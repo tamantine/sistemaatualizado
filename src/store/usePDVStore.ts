@@ -546,8 +546,8 @@ export const usePDVStore = create<PDVState>((set, get) => ({
     try {
       const vendaData = {
         numero_venda: numeroVenda,
-        caixa_id: caixa?.id,
-        cliente_id: undefined,
+        caixa_id: caixa?.id || null,
+        cliente_id: null,
         operador_nome: caixa?.operador_nome ?? 'Operador',
         subtotal: sub,
         desconto_valor: descontoValor,
@@ -559,7 +559,7 @@ export const usePDVStore = create<PDVState>((set, get) => ({
         status: 'finalizada' as const,
         observacoes:
           [clienteNome ? `Cliente: ${clienteNome}` : '', observacao].filter(Boolean).join(' | ') ||
-          undefined,
+          null,
       };
 
       const vendaItens = itens.map((i) => ({

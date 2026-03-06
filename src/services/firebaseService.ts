@@ -388,15 +388,17 @@ export const vendasService = {
     }[]
   ): Promise<Venda | undefined> {
     try {
+      const removeUndefined = (obj) => Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined));
+
       const vendaRef = await addDoc(collection(db, 'vendas'), {
-        ...vendaData,
+        ...removeUndefined(vendaData),
         created_at: getCurrentTimestamp(),
       });
 
       for (const item of itens) {
         await addDoc(collection(db, 'venda_itens'), {
           venda_id: vendaRef.id,
-          ...item,
+          ...removeUndefined(item),
           created_at: getCurrentTimestamp(),
         });
       }
@@ -404,7 +406,7 @@ export const vendasService = {
       for (const pag of pagamentos) {
         await addDoc(collection(db, 'venda_pagamentos'), {
           venda_id: vendaRef.id,
-          ...pag,
+          ...removeUndefined(pag),
           created_at: getCurrentTimestamp(),
         });
       }
