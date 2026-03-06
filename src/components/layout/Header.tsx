@@ -14,7 +14,6 @@ const titulosRota: Record<string, string> = {
     '/estoque': 'Gestão de Estoque',
     '/clientes': 'Clientes & CRM',
     '/financeiro': 'Financeiro',
-    '/compras': 'Compras',
     '/fornecedores': 'Fornecedores',
     '/relatorios': 'Relatórios',
     '/fiscal': 'Fiscal',
