@@ -602,18 +602,18 @@ export const usePDVStore = create<PDVState>((set, get) => ({
           let credito = caixa.valor_cartao_credito ?? 0;
           let pix = caixa.valor_pix ?? 0;
           for (const p of pagamentos) {
-            if (p.forma_pagamento === 'dinheiro') dinheiro += p.valor;
+            if (p.forma_pagamento === 'dinheiro') dinheiro += (p.valor - troco);
             else if (p.forma_pagamento === 'debito') debito += p.valor;
             else if (p.forma_pagamento === 'credito') credito += p.valor;
             else if (p.forma_pagamento === 'pix') pix += p.valor;
           }
-          atualizacaoCaixa.valor_dinheiro = dinheiro - troco;
+          atualizacaoCaixa.valor_dinheiro = dinheiro;
           atualizacaoCaixa.valor_cartao_debito = debito;
           atualizacaoCaixa.valor_cartao_credito = credito;
           atualizacaoCaixa.valor_pix = pix;
         } else {
           if (formaPagamento === 'dinheiro')
-            atualizacaoCaixa.valor_dinheiro = (caixa.valor_dinheiro ?? 0) + totalVenda - troco;
+            atualizacaoCaixa.valor_dinheiro = (caixa.valor_dinheiro ?? 0) + valorPago - troco;
           else if (formaPagamento === 'debito')
             atualizacaoCaixa.valor_cartao_debito = (caixa.valor_cartao_debito ?? 0) + totalVenda;
           else if (formaPagamento === 'credito')
@@ -652,7 +652,7 @@ export const usePDVStore = create<PDVState>((set, get) => ({
           total_vendas: (caixa.total_vendas ?? 0) + 1,
           valor_dinheiro:
             formaPagamento === 'dinheiro'
-              ? (caixa.valor_dinheiro ?? 0) + totalVenda - troco
+              ? (caixa.valor_dinheiro ?? 0) + valorPago - troco
               : (caixa.valor_dinheiro ?? 0),
           valor_cartao_debito:
             formaPagamento === 'debito'
