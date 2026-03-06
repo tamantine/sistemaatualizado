@@ -575,6 +575,92 @@ export const pedidosCompraService = {
       return [];
     }
   },
+
+  async criar(pedido: any): Promise<any | undefined> {
+    try {
+      const docRef = await addDoc(collection(db, 'pedidos_compra'), {
+        ...pedido,
+        created_at: getCurrentTimestamp(),
+        updated_at: getCurrentTimestamp(),
+      });
+      return { id: docRef.id, ...pedido };
+    } catch (error) {
+      console.error('[Firebase] Erro ao criar pedido de compra:', error);
+      return undefined;
+    }
+  },
+
+  async atualizar(id: string, dados: any): Promise<any | undefined> {
+    try {
+      await updateDoc(doc(db, 'pedidos_compra', id), {
+        ...dados,
+        updated_at: getCurrentTimestamp(),
+      });
+      return { id, ...dados };
+    } catch (error) {
+      console.error('[Firebase] Erro ao atualizar pedido de compra:', error);
+      return undefined;
+    }
+  },
+
+  async remover(id: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, 'pedidos_compra', id));
+    } catch (error) {
+      console.error('[Firebase] Erro ao remover pedido de compra:', error);
+    }
+  },
+};
+
+// =============================================
+// COTAÇÕES
+// =============================================
+export const cotacoesService = {
+  async listar(): Promise<any[]> {
+    try {
+      const q = query(collection(db, 'cotacoes'), orderBy('created_at', 'desc'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error('[Firebase] Erro ao listar cotações:', error);
+      return [];
+    }
+  },
+
+  async criar(cotacao: any): Promise<any | undefined> {
+    try {
+      const docRef = await addDoc(collection(db, 'cotacoes'), {
+        ...cotacao,
+        created_at: getCurrentTimestamp(),
+        updated_at: getCurrentTimestamp(),
+      });
+      return { id: docRef.id, ...cotacao };
+    } catch (error) {
+      console.error('[Firebase] Erro ao criar cotação:', error);
+      return undefined;
+    }
+  },
+
+  async atualizar(id: string, dados: any): Promise<any | undefined> {
+    try {
+      await updateDoc(doc(db, 'cotacoes', id), {
+        ...dados,
+        updated_at: getCurrentTimestamp(),
+      });
+      return { id, ...dados };
+    } catch (error) {
+      console.error('[Firebase] Erro ao atualizar cotação:', error);
+      return undefined;
+    }
+  },
+
+  async remover(id: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, 'cotacoes', id));
+    } catch (error) {
+      console.error('[Firebase] Erro ao remover cotação:', error);
+    }
+  },
 };
 
 // =============================================
@@ -672,6 +758,92 @@ export const promocoesService = {
       return [];
     }
   },
+
+  async criar(promocao: any): Promise<any | undefined> {
+    try {
+      const docRef = await addDoc(collection(db, 'promocoes'), {
+        ...promocao,
+        created_at: getCurrentTimestamp(),
+        updated_at: getCurrentTimestamp(),
+      });
+      return { id: docRef.id, ...promocao };
+    } catch (error) {
+      console.error('[Firebase] Erro ao criar promoção:', error);
+      return undefined;
+    }
+  },
+
+  async atualizar(id: string, dados: any): Promise<any | undefined> {
+    try {
+      await updateDoc(doc(db, 'promocoes', id), {
+        ...dados,
+        updated_at: getCurrentTimestamp(),
+      });
+      return { id, ...dados };
+    } catch (error) {
+      console.error('[Firebase] Erro ao atualizar promoção:', error);
+      return undefined;
+    }
+  },
+
+  async remover(id: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, 'promocoes', id));
+    } catch (error) {
+      console.error('[Firebase] Erro ao remover promoção:', error);
+    }
+  },
+};
+
+// =============================================
+// TABELAS DE PREÇO
+// =============================================
+export const tabelasPrecoService = {
+  async listar(): Promise<any[]> {
+    try {
+      const q = query(collection(db, 'tabelas_preco'));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error('[Firebase] Erro ao listar tabelas de preço:', error);
+      return [];
+    }
+  },
+
+  async criar(tabela: any): Promise<any | undefined> {
+    try {
+      const docRef = await addDoc(collection(db, 'tabelas_preco'), {
+        ...tabela,
+        created_at: getCurrentTimestamp(),
+        updated_at: getCurrentTimestamp(),
+      });
+      return { id: docRef.id, ...tabela };
+    } catch (error) {
+      console.error('[Firebase] Erro ao criar tabela de preço:', error);
+      return undefined;
+    }
+  },
+
+  async atualizar(id: string, dados: any): Promise<any | undefined> {
+    try {
+      await updateDoc(doc(db, 'tabelas_preco', id), {
+        ...dados,
+        updated_at: getCurrentTimestamp(),
+      });
+      return { id, ...dados };
+    } catch (error) {
+      console.error('[Firebase] Erro ao atualizar tabela de preço:', error);
+      return undefined;
+    }
+  },
+
+  async remover(id: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, 'tabelas_preco', id));
+    } catch (error) {
+      console.error('[Firebase] Erro ao remover tabela de preço:', error);
+    }
+  },
 };
 
 // =============================================
@@ -691,24 +863,27 @@ export const dashboardService = {
       try {
         const qVendasHoje = query(
           collection(db, 'vendas'),
-          where('status', '==', 'finalizada'),
           where('created_at', '>=', hojeISO),
           orderBy('created_at', 'desc')
         );
         const snapshotVendasHoje = await getDocs(qVendasHoje);
-        vendasHojeList = snapshotVendasHoje.docs.map(d => ({ id: d.id, ...d.data() }));
-      } catch { /* ignora erro de índice */ }
+        vendasHojeList = snapshotVendasHoje.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter((v: any) => v.status === 'finalizada');
+      } catch (err) { console.error('[Dashboard] Erro index vendas hoje', err); }
 
       try {
         const qUltimas = query(
           collection(db, 'vendas'),
-          where('status', '==', 'finalizada'),
           orderBy('created_at', 'desc'),
-          limit(5)
+          limit(20)
         );
         const snapshotUltimas = await getDocs(qUltimas);
-        ultimasVendas = snapshotUltimas.docs.map(d => ({ id: d.id, ...d.data() }));
-      } catch { /* ignora */ }
+        ultimasVendas = snapshotUltimas.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter((v: any) => v.status === 'finalizada')
+          .slice(0, 5);
+      } catch (err) { console.error('[Dashboard] Erro index ultimas vendas', err); }
 
       const totalVendasHoje = vendasHojeList.reduce((acc: number, v: any) => acc + (v.total || 0), 0);
       const qtdVendasHoje = vendasHojeList.length;
@@ -739,13 +914,15 @@ export const dashboardService = {
       try {
         const qSemana = query(
           collection(db, 'vendas'),
-          where('status', '==', 'finalizada'),
           where('created_at', '>=', inicioSemana.toISOString()),
           orderBy('created_at', 'asc')
         );
         const snapSemana = await getDocs(qSemana);
-        vendasUltimos7Dias = snapSemana.docs.map(d => ({ id: d.id, ...d.data() }));
-      } catch {
+        vendasUltimos7Dias = snapSemana.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter((v: any) => v.status === 'finalizada');
+      } catch (err) {
+        console.error('[Dashboard] Erro index vendas semana', err);
         // fallback: pelo menos preenche o gráfico com o que já carregou hoje
         vendasUltimos7Dias = vendasHojeList;
       }

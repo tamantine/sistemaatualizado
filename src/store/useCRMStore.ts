@@ -9,7 +9,7 @@
 
 import { create } from 'zustand';
 import type { Cliente, Promocao, TabelaPreco } from '../types';
-import { clientesService, promocoesService } from '../services/database';
+import { clientesService, promocoesService, tabelasPrecoService } from '../services/database';
 
 // ─────────────────────────────────────────────
 // Configurações de fidelidade (estático)
@@ -135,18 +135,19 @@ export const useCRMStore = create<CRMState>((set, get) => ({
 
   carregarDados: async () => {
     try {
-      const [clientes, promocoes] = await Promise.all([
+      const [clientes, promocoes, tabelasPreco] = await Promise.all([
         clientesService.listar(),
         promocoesService.listar(),
+        tabelasPrecoService.listar(),
       ]);
-      set({ clientes, promocoes, offlineFallback: false });
+      set({ clientes, promocoes, tabelasPreco, offlineFallback: false });
       console.log(
-        `[CRM] ✅ ${clientes.length} cliente(s) e ${promocoes.length} promoção(ões) carregado(s).`
+        `[CRM] ✅ ${clientes.length} cliente(s), ${promocoes.length} promoção(ões) e ${tabelasPreco.length} tabela(s) carregado(s).`
       );
     } catch (err) {
       console.error('[CRM] ❌ Falha ao carregar dados do Firebase:', err);
       // Mantém arrays vazios — não injeta dados de exemplo
-      set({ clientes: [], promocoes: [], offlineFallback: true });
+      set({ clientes: [], promocoes: [], tabelasPreco: [], offlineFallback: true });
     }
   },
 
@@ -228,15 +229,30 @@ export const useCRMStore = create<CRMState>((set, get) => ({
   setModalPromocao: (v) => set({ modalPromocao: v }),
   setPromocaoEditando: (p) => set({ promocaoEditando: p }),
 
-  adicionarPromocao: (p) => set((s) => ({ promocoes: [p, ...s.promocoes] })),
-  atualizarPromocao: (id, dados) =>
-    set((s) => ({ promocoes: s.promocoes.map((p) => (p.id === id ? { ...p, ...dados } : p)) })),
-  removerPromocao: (id) =>
-    set((s) => ({ promocoes: s.promocoes.filter((p) => p.id !== id) })),
-  togglePromocao: (id) =>
+  adicionarPromocao: (p) => {
+    set((s) => ({ promocoes: [p, ...s.promocoes] }));
+    if (!get().offlineFallback) {
+      const { id, created_at, updated_at, ...dados } = p as any;
+      promocoesService.criar(dados).catch(console.error);
+    }
+  },
+  atualizarPromocao: (id, dados) => {
+    set((s) => ({ promocoes: s.promocoes.map((p) => (p.id === id ? { ...p, ...dados } : p)) }));
+    if (!get().offlineFallback) promocoesService.atualizar(id, dados).catch(console.error);
+  },
+  removerPromocao: (id) => {
+    set((s) => ({ promocoes: s.promocoes.filter((p) => p.id !== id) }));
+    if (!get().offlineFallback) promocoesService.remover(id).catch(console.error);
+  },
+  togglePromocao: (id) => {
     set((s) => ({
       promocoes: s.promocoes.map((p) => (p.id === id ? { ...p, ativo: !p.ativo } : p)),
-    })),
+    }));
+    const promo = get().promocoes.find(p => p.id === id);
+    if (!get().offlineFallback && promo) {
+      promocoesService.atualizar(id, { ativo: promo.ativo }).catch(console.error);
+    }
+  },
 
   // ─────────────────────────────────────────
   // CRUD — Tabelas de preço
@@ -244,13 +260,23 @@ export const useCRMStore = create<CRMState>((set, get) => ({
 
   setModalTabela: (v) => set({ modalTabela: v }),
   setTabelaEditando: (t) => set({ tabelaEditando: t }),
-  adicionarTabela: (t) => set((s) => ({ tabelasPreco: [t, ...s.tabelasPreco] })),
-  atualizarTabela: (id, dados) =>
+  adicionarTabela: (t) => {
+    set((s) => ({ tabelasPreco: [t, ...s.tabelasPreco] }));
+    if (!get().offlineFallback) {
+      const { id, created_at, updated_at, ...dados } = t as any;
+      tabelasPrecoService.criar(dados).catch(console.error);
+    }
+  },
+  atualizarTabela: (id, dados) => {
     set((s) => ({
       tabelasPreco: s.tabelasPreco.map((t) => (t.id === id ? { ...t, ...dados } : t)),
-    })),
-  removerTabela: (id) =>
-    set((s) => ({ tabelasPreco: s.tabelasPreco.filter((t) => t.id !== id) })),
+    }));
+    if (!get().offlineFallback) tabelasPrecoService.atualizar(id, dados).catch(console.error);
+  },
+  removerTabela: (id) => {
+    set((s) => ({ tabelasPreco: s.tabelasPreco.filter((t) => t.id !== id) }));
+    if (!get().offlineFallback) tabelasPrecoService.remover(id).catch(console.error);
+  },
 
   // ─────────────────────────────────────────
   // Getters computados

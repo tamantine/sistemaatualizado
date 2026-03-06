@@ -4,7 +4,7 @@
 // =============================================
 import { create } from 'zustand';
 import type { Fornecedor, PedidoCompra } from '../types';
-import { fornecedoresService, pedidosCompraService } from '../services/database';
+import { fornecedoresService, pedidosCompraService, cotacoesService } from '../services/database';
 
 // Cotações tipagem
 export interface Cotacao {
@@ -99,11 +99,12 @@ export const useComprasStore = create<ComprasState>((set, get) => ({
 
     carregarDados: async () => {
         try {
-            const [fornecedores, pedidos] = await Promise.all([
+            const [fornecedores, pedidos, cotacoes] = await Promise.all([
                 fornecedoresService.listar(),
                 pedidosCompraService.listar(),
+                cotacoesService.listar(),
             ]);
-            set({ fornecedores, pedidos });
+            set({ fornecedores, pedidos, cotacoes });
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Erro ao carregar dados de compras';
             console.error('[Compras] ❌ Falha ao carregar dados do Firebase (iniciando com arrays vazios):', message);
@@ -116,22 +117,38 @@ export const useComprasStore = create<ComprasState>((set, get) => ({
     setFiltroPedido: (f) => set({ filtroPedido: f }),
     setPedidoSelecionado: (p) => set({ pedidoSelecionado: p }),
     setModalPedido: (v) => set({ modalPedido: v }),
-    adicionarPedido: (p) => set((s) => ({ pedidos: [p, ...s.pedidos] })),
-    atualizarPedido: (id, dados) =>
-        set((s) => ({ pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, ...dados } : p)) })),
-    removerPedido: (id) => set((s) => ({ pedidos: s.pedidos.filter((p) => p.id !== id) })),
-    receberPedido: (id) =>
+    adicionarPedido: (p) => {
+        set((s) => ({ pedidos: [p, ...s.pedidos] }));
+        if (!get().usandoMock) {
+            const { id, created_at, updated_at, fornecedor, ...dados } = p as any;
+            pedidosCompraService.criar(dados).catch(console.error);
+        }
+    },
+    atualizarPedido: (id, dados) => {
+        set((s) => ({ pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, ...dados } : p)) }));
+        if (!get().usandoMock) pedidosCompraService.atualizar(id, dados).catch(console.error);
+    },
+    removerPedido: (id) => {
+        set((s) => ({ pedidos: s.pedidos.filter((p) => p.id !== id) }));
+        if (!get().usandoMock) pedidosCompraService.remover(id).catch(console.error);
+    },
+    receberPedido: (id) => {
+        const dataStatus = { status: 'recebido' as const, data_recebimento: new Date().toISOString().split('T')[0] };
         set((s) => ({
             pedidos: s.pedidos.map((p) =>
-                p.id === id ? { ...p, status: 'recebido' as const, data_recebimento: new Date().toISOString().split('T')[0], updated_at: new Date().toISOString().split('T')[0] } : p
+                p.id === id ? { ...p, ...dataStatus, updated_at: new Date().toISOString().split('T')[0] } : p
             ),
-        })),
-    aprovarPedido: (id) =>
+        }));
+        if (!get().usandoMock) pedidosCompraService.atualizar(id, dataStatus).catch(console.error);
+    },
+    aprovarPedido: (id) => {
         set((s) => ({
             pedidos: s.pedidos.map((p) =>
                 p.id === id ? { ...p, status: 'aprovado' as const, updated_at: new Date().toISOString().split('T')[0] } : p
             ),
-        })),
+        }));
+        if (!get().usandoMock) pedidosCompraService.atualizar(id, { status: 'aprovado' }).catch(console.error);
+    },
 
     setBuscaFornecedor: (b) => set({ buscaFornecedor: b }),
     setFornecedorSelecionado: (f) => set({ fornecedorSelecionado: f }),
@@ -154,9 +171,17 @@ export const useComprasStore = create<ComprasState>((set, get) => ({
 
     setCotacaoSelecionada: (c) => set({ cotacaoSelecionada: c }),
     setModalCotacao: (v) => set({ modalCotacao: v }),
-    adicionarCotacao: (c) => set((s) => ({ cotacoes: [c, ...s.cotacoes] })),
-    fecharCotacao: (id) =>
-        set((s) => ({ cotacoes: s.cotacoes.map((c) => (c.id === id ? { ...c, status: 'fechada' as const } : c)) })),
+    adicionarCotacao: (c) => {
+        set((s) => ({ cotacoes: [c, ...s.cotacoes] }));
+        if (!get().usandoMock) {
+            const { id, created_at, updated_at, respostas, ...dados } = c as any;
+            cotacoesService.criar(dados).catch(console.error);
+        }
+    },
+    fecharCotacao: (id) => {
+        set((s) => ({ cotacoes: s.cotacoes.map((c) => (c.id === id ? { ...c, status: 'fechada' as const } : c)) }));
+        if (!get().usandoMock) cotacoesService.atualizar(id, { status: 'fechada' }).catch(console.error);
+    },
 
     pedidosFiltrados: () => {
         const { pedidos, buscaPedido, filtroPedido } = get();
