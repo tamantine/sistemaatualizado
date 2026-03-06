@@ -3,10 +3,31 @@
 // Usa Firestore para armazenar dados
 // =============================================
 import { 
-  collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit
+  collection, doc, getDocs, getDoc, addDoc as firestoreAddDoc, updateDoc as firestoreUpdateDoc, deleteDoc, query, where, orderBy, limit
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type { Categoria, Produto, Fornecedor, Cliente, Caixa, Venda } from '../types';
+
+// =============================================
+// SANITIZAÇÃO GLOBAL CONTRA UNDEFINED
+// O Firestore lança erro silencisoso se receber propriedades 'undefined'.
+// Esta barreira limpa as impurezas de todos os módulos antes do envio.
+// =============================================
+export const sanitizeData = (obj: any): any => {
+  if (obj === null || obj === undefined) return null;
+  if (Array.isArray(obj)) return obj.map(sanitizeData);
+  if (typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return obj;
+  
+  return Object.fromEntries(
+    Object.entries(obj)
+      .filter(([_, v]) => v !== undefined)
+      .map(([k, v]) => [k, sanitizeData(v)])
+  );
+};
+
+const addDoc = (ref: any, data: any) => firestoreAddDoc(ref, sanitizeData(data));
+const updateDoc = (ref: any, data: any) => firestoreUpdateDoc(ref, sanitizeData(data));
 
 function getCurrentTimestamp() {
   return new Date().toISOString();
@@ -388,17 +409,15 @@ export const vendasService = {
     }[]
   ): Promise<Venda | undefined> {
     try {
-      const removeUndefined = (obj) => Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined));
-
       const vendaRef = await addDoc(collection(db, 'vendas'), {
-        ...removeUndefined(vendaData),
+        ...vendaData,
         created_at: getCurrentTimestamp(),
       });
 
       for (const item of itens) {
         await addDoc(collection(db, 'venda_itens'), {
           venda_id: vendaRef.id,
-          ...removeUndefined(item),
+          ...item,
           created_at: getCurrentTimestamp(),
         });
       }
@@ -406,7 +425,7 @@ export const vendasService = {
       for (const pag of pagamentos) {
         await addDoc(collection(db, 'venda_pagamentos'), {
           venda_id: vendaRef.id,
-          ...removeUndefined(pag),
+          ...pag,
           created_at: getCurrentTimestamp(),
         });
       }
