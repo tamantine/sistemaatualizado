@@ -16,6 +16,7 @@ import {
   vendasService,
   movimentacoesCaixaService,
 } from '../services/database';
+import { gerarRelatorioFechamentoPDF } from '../utils/pdfGenerator';
 
 // ─────────────────────────────────────────────
 // Tipos locais
@@ -272,14 +273,26 @@ export const usePDVStore = create<PDVState>((set, get) => ({
     const { caixa } = get();
     if (caixa) {
       try {
-        await caixasService.fechar(caixa.id, {
-          valor_fechamento:
-            (caixa.valor_dinheiro ?? 0) +
-            (caixa.valor_cartao_debito ?? 0) +
-            (caixa.valor_cartao_credito ?? 0) +
-            (caixa.valor_pix ?? 0),
-        });
-      } catch { /* continua mesmo sem salvar */ }
+        const valor_fechamento = (caixa.valor_dinheiro ?? 0) +
+          (caixa.valor_cartao_debito ?? 0) +
+          (caixa.valor_cartao_credito ?? 0) +
+          (caixa.valor_pix ?? 0);
+          
+        await caixasService.fechar(caixa.id, { valor_fechamento });
+        
+        caixa.status = 'fechado';
+        caixa.valor_fechamento = valor_fechamento;
+        caixa.fechado_em = new Date().toISOString();
+
+        // Busca Vendas e Movimentações para PDF
+        const vendas = await vendasService.listarPorCaixa(caixa.id);
+        const movimentacoes = await movimentacoesCaixaService.listarPorCaixa(caixa.id);
+        
+        gerarRelatorioFechamentoPDF(caixa, vendas, movimentacoes);
+        
+      } catch (err) { 
+        console.error('[PDV] Erro ao fechar caixa e gerar relatório:', err);
+      }
     }
     localStorage.removeItem('pdv_caixa');
     set((s) => ({

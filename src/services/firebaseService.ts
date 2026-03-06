@@ -453,6 +453,17 @@ export const vendasService = {
       return [];
     }
   },
+  async listarPorCaixa(caixaId: string): Promise<Venda[]> {
+    try {
+      const q = query(collection(db, 'vendas'), where('caixa_id', '==', caixaId));
+      const snapshot = await getDocs(q);
+      const vendas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Venda[];
+      return vendas.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } catch (error) {
+      console.error('[Firebase] Erro ao listar vendas por caixa:', error);
+      return [];
+    }
+  },
 };
 
 // =============================================
