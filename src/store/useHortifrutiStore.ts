@@ -87,7 +87,7 @@ interface HortifrutiState {
     setModalQualidade: (v: boolean) => void;
     setModalPerda: (v: boolean) => void;
 
-    // Supabase
+    // Firebase
     carregarDados: () => Promise<void>;
     adicionarQualidade: (r: Omit<RegistroQualidade, 'id' | 'created_at'>) => Promise<void>;
     adicionarPerda: (r: Omit<RegistroPerda, 'id'>) => Promise<void>;
@@ -126,7 +126,7 @@ export const useHortifrutiStore = create<HortifrutiState>((set, get) => ({
             ]);
             set({ registrosQualidade, registrosPerdas, sazonalidade, rastreios, carregando: false });
         } catch (err) {
-            console.error('[Hortifruti] Erro ao carregar dados do Supabase:', err);
+            console.error('[Hortifruti] Erro ao carregar dados do Firebase:', err);
             set({ carregando: false });
         }
     },

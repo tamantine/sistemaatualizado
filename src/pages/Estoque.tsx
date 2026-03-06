@@ -25,7 +25,7 @@ export default function Estoque() {
     } = useEstoqueStore();
     const { adicionarToast } = useAppStore();
 
-    // Carregar dados do Supabase na montagem
+    // Carregar dados do Firebase na montagem
     const carregarDados = useEstoqueStore((s) => s.carregarDados);
     useEffect(() => { carregarDados(); }, [carregarDados]);
 

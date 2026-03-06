@@ -15,32 +15,13 @@ cp .env.example .env.local
 npm run dev
 ```
 
-## 🔧 Configuração do Supabase
+## 🔧 Configuração do Firebase
 
-### 1. Criar projeto no Supabase
+Consulte os arquivos `CRIAR-FIRESTORE.md` e `FIREBASE-REGRAS.md` para instrucões de configuração do seu banco de dados.
 
-1. Acesse [supabase.com](https://supabase.com)
-2. Crie um novo projeto
-3. Anote as credenciais:
-   - **Project URL**: Configurações → API → Project URL
-   - **anon public key**: Configurações → API → Project API keys → `anon` key
+## 📦 Modo Demo
 
-### 2. Configurar variáveis de ambiente
-
-Edite o arquivo `.env.local`:
-
-```env
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_ANON_KEY=sua-chave-aqui
-```
-
-### 3. Executar migrações (SQL)
-
-No painel do Supabase, vá em **SQL Editor** e execute o script de banco de dados disponível em `supabase/schema.sql` (se existir).
-
-## 📦 Modo Demo (sem Supabase)
-
-O sistema funciona sem Supabase! Quando as variáveis de ambiente não estão configuradas:
+O sistema funciona sem banco de dados remoto! Quando configurado dessa forma:
 
 - Sistema inicia em **modo demo**
 - Usuários podem fazer login com conta demo
@@ -71,8 +52,8 @@ src/
 ├── components/     # Componentes React
 ├── pages/         # Páginas principais
 ├── store/         # Estado global (Zustand)
-├── services/      # Serviços (Supabase, dispositivos)
-├── lib/          # Configurações (Supabase)
+├── services/      # Serviços (Firebase, dispositivos)
+├── lib/          # Configurações (Firebase)
 ├── hooks/         # Hooks personalizados
 ├── types/         # Tipos TypeScript
 └── utils/         # Utilitários
@@ -85,7 +66,7 @@ O projeto já está configurado com code-splitting:
 - React + Router em chunk separado
 - Lucide Icons em chunk separado
 - Recharts (gráficos) em chunk separado
-- Supabase em chunk separado
+- Firebase em chunk separado
 
 Isso melhora significativamente o tempo de carregamento inicial.
 

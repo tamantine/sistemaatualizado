@@ -1,5 +1,5 @@
 // =============================================
-// Store: Compras & Fornecedores — Integrado com Supabase
+// Store: Compras & Fornecedores — Integrado com Firebase
 // Pedidos de compra, fornecedores, cotações, recebimento
 // =============================================
 import { create } from 'zustand';
@@ -74,7 +74,7 @@ interface ComprasState {
 
     // Getters
     pedidosFiltrados: () => PedidoCompra[];
-    // Supabase
+    // Firebase
     usandoMock: boolean;
     carregarDados: () => Promise<void>;
     fornecedoresFiltrados: () => Fornecedor[];

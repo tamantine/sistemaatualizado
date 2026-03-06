@@ -1,6 +1,6 @@
 // =============================================
 // Componente: ModalSangria — Sangria e Suprimento
-// Versão profissional com histórico, validações e Supabase
+// Versão profissional com histórico, validações e Firebase
 // =============================================
 import { useState } from 'react';
 import { usePDVStore } from '../../store/usePDVStore';

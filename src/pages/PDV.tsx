@@ -31,7 +31,7 @@ export default function PDV() {
     const { adicionarToast } = useAppStore();
     const [modalDispositivos, setModalDispositivos] = useState(false);
 
-    // Ao montar: verifica caixa aberto (Supabase/localStorage) e carrega produtos
+    // Ao montar: verifica caixa aberto (Firebase/localStorage) e carrega produtos
     useEffect(() => {
         verificarCaixaAberto();
         carregarProdutos();
