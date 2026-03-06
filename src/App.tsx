@@ -13,6 +13,7 @@ import CRM from './pages/CRM';
 import Compras from './pages/Compras';
 import HortifrutiPage from './pages/Hortifruti';
 import PDVStandalone from './pages/PDVStandalone';
+import { Relatorios } from './pages/Relatorios';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuthStore } from './store/useAuthStore';
@@ -64,7 +65,7 @@ function App() {
             <Route path="/compras" element={<Compras />} />
             <Route path="/promocoes" element={<CRM />} />
             <Route path="/fornecedores" element={<Compras />} />
-            <Route path="/relatorios" element={<EmBreve titulo="Relatórios" />} />
+            <Route path="/relatorios" element={<Relatorios />} />
             <Route path="/fiscal" element={<EmBreve titulo="Fiscal & Tributário" />} />
             <Route path="/hortifruti" element={<HortifrutiPage />} />
           </Route>
