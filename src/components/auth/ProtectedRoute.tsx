@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { Loader2 } from 'lucide-react';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-    const { user, loading, inicializado } = useAuthStore();
+    const { user, modoDemo, loading, inicializado } = useAuthStore();
     const location = useLocation();
 
     // Se ainda não inicializou (verificando sessão), mostra loading
@@ -16,8 +16,9 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
         );
     }
 
-    // Se não tem usuário, redireciona para login
-    if (!user) {
+    // Se não tem usuário e não está em modo demo, redireciona para login
+    // O modoDemo permite acesso sem autenticação real
+    if (!user && !modoDemo) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 

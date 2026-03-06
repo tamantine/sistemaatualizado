@@ -434,7 +434,7 @@ function ModalPerda() {
 
     const salvar = () => {
         if (!produto.trim() || !quantidade || !valor) { adicionarToast({ tipo: 'erro', titulo: 'Preencha os campos obrigatórios' }); return; }
-        store.adicionarPerda({ id: crypto.randomUUID(), produto_nome: produto.trim(), categoria, quantidade: parseFloat(quantidade), unidade, valor_perda: parseFloat(valor), motivo, data_registro: new Date().toISOString().split('T')[0], responsavel: 'Operador', destino });
+        store.adicionarPerda({ produto_nome: produto.trim(), categoria, quantidade: parseFloat(quantidade), unidade, valor_perda: parseFloat(valor), motivo, data_registro: new Date().toISOString().split('T')[0], responsavel: 'Operador', destino });
         adicionarToast({ tipo: 'sucesso', titulo: 'Perda registrada' });
         store.setModalPerda(false);
     };

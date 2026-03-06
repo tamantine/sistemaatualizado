@@ -135,7 +135,7 @@ export default function Sidebar() {
                         </div>
                     ) : (
                         <div className="flex justify-center mb-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white text-xs font-bold shrink-0" title={user?.email}>
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white text-xs font-bold shrink-0" title={user?.email ?? ''}>
                                 {user?.email?.substring(0, 2).toUpperCase() || 'US'}
                             </div>
                         </div>

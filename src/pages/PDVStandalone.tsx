@@ -1,8 +1,9 @@
 // =============================================
 // Página: PDV Standalone — Tela Cheia
 // Abre o PDV sem o layout principal, em fullscreen
+// Inclui: balança, impressora, cupom pós-venda
 // =============================================
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePDVStore } from '../store/usePDVStore';
 import { useAppStore } from '../store/useAppStore';
 import ModalAberturaCaixa from '../components/pdv/ModalAberturaCaixa';
@@ -11,16 +12,18 @@ import Carrinho from '../components/pdv/Carrinho';
 import ModalPagamento from '../components/pdv/ModalPagamento';
 import ModalEspera from '../components/pdv/ModalEspera';
 import ModalSangria from '../components/pdv/ModalSangria';
+import ModalDispositivos from '../components/pdv/ModalDispositivos';
 import ToastContainer from '../components/ui/Toast';
 import { formatarMoeda, formatarDataHora } from '../utils/formatters';
 import {
     Monitor, DollarSign, CreditCard, QrCode,
     ArrowRightLeft, Clock, LogOut, Minimize,
-    Banknote,
+    Banknote, Settings,
 } from 'lucide-react';
 
 export default function PDVStandalone() {
     const containerRef = useRef<HTMLDivElement>(null);
+    const [modalDispositivos, setModalDispositivos] = useState(false);
 
     const {
         caixaAberto, caixa,
@@ -77,6 +80,10 @@ export default function PDVStandalone() {
                 e.preventDefault();
                 setModalSangria(true);
             }
+            if (e.key === 'F7') {
+                e.preventDefault();
+                setModalDispositivos(true);
+            }
             if (e.key === 'Escape' && itens.length > 0) {
                 e.preventDefault();
                 if (confirm('Deseja cancelar a venda atual?')) {
@@ -91,10 +98,11 @@ export default function PDVStandalone() {
     }, [caixaAberto, itens, setModalPagamento, setModalEspera, setModalSangria, salvarEmEspera, limparCarrinho, adicionarToast]);
 
     const sairFullscreen = () => {
+        // Apenas sai do fullscreen - NÃO fecha a aba
         if (document.fullscreenElement) {
             document.exitFullscreen().catch(() => {});
         }
-        window.close();
+        // Removido window.close() que causava fechamento da aba
     };
 
     // Se caixa não está aberto, mostra tela de abertura
@@ -167,6 +175,14 @@ export default function PDVStandalone() {
                     </button>
 
                     <button
+                        onClick={() => setModalDispositivos(true)}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-surface-400 hover:text-surface-200 hover:bg-surface-700 transition-colors"
+                        title="Balança e Impressora (F7)"
+                    >
+                        <Settings size={13} /> <span className="hidden sm:inline">Dispositivos</span>
+                    </button>
+
+                    <button
                         onClick={sairFullscreen}
                         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-surface-400 hover:text-surface-200 hover:bg-surface-700 transition-colors"
                         title="Sair da tela cheia"
@@ -204,6 +220,7 @@ export default function PDVStandalone() {
                 <span><kbd className="px-1 py-0.5 bg-surface-700 rounded text-surface-400 font-mono">F2</kbd> Buscar</span>
                 <span><kbd className="px-1 py-0.5 bg-surface-700 rounded text-surface-400 font-mono">F4</kbd> Pagamento</span>
                 <span><kbd className="px-1 py-0.5 bg-surface-700 rounded text-surface-400 font-mono">F6</kbd> Sangria</span>
+                <span><kbd className="px-1 py-0.5 bg-surface-700 rounded text-surface-400 font-mono">F7</kbd> Dispositivos</span>
                 <span><kbd className="px-1 py-0.5 bg-surface-700 rounded text-surface-400 font-mono">F9</kbd> Espera</span>
                 <span><kbd className="px-1 py-0.5 bg-surface-700 rounded text-surface-400 font-mono">F10</kbd> Ver Esperas</span>
                 <span><kbd className="px-1 py-0.5 bg-surface-700 rounded text-surface-400 font-mono">ESC</kbd> Cancelar</span>
@@ -216,6 +233,7 @@ export default function PDVStandalone() {
             <ModalPagamento />
             <ModalEspera />
             <ModalSangria />
+            <ModalDispositivos aberto={modalDispositivos} onFechar={() => setModalDispositivos(false)} />
 
             {/* Toast notifications */}
             <ToastContainer />

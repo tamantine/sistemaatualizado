@@ -4,7 +4,7 @@
 // =============================================
 import { create } from 'zustand';
 import type { Fornecedor, PedidoCompra } from '../types';
-import { fornecedoresService, pedidosCompraService } from '../services/supabaseService';
+import { fornecedoresService, pedidosCompraService } from '../services/database';
 
 // Cotações tipagem
 export interface Cotacao {
@@ -106,7 +106,7 @@ export const useComprasStore = create<ComprasState>((set, get) => ({
             set({ fornecedores, pedidos });
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Erro ao carregar dados de compras';
-            console.error('[Compras] Erro ao carregar dados do Supabase (usando dados vazios):', message);
+            console.error('[Compras] ❌ Falha ao carregar dados do Firebase (iniciando com arrays vazios):', message);
             // Não lança exceção: mantém arrays vazios para não quebrar a UI
         }
     },

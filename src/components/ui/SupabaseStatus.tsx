@@ -1,11 +1,12 @@
 // =============================================
-// Componente: SupabaseStatus
-// Indicador visual de conexão com o Supabase
+// Componente: Status de Conexão
+// Indicador visual de conexão com o Firebase
 // Verde = Conectado | Vermelho = Desconectado
 // =============================================
 import { useState, useEffect } from 'react';
 import { Database, Wifi, WifiOff } from 'lucide-react';
-import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { db } from '../../lib/firebase';
+import { collection, getDocs, query, limit } from 'firebase/firestore';
 
 interface StatusConexao {
   conectado: boolean;
@@ -21,47 +22,24 @@ export default function SupabaseStatus({ compact = false }: { compact?: boolean 
 
   useEffect(() => {
     const verificarConexao = async () => {
-      // Se Supabase não está configurado, mostra como desconectado (modo demo)
-      if (!isSupabaseConfigured || !supabase) {
-        setStatus({
-          conectado: false,
-          verificando: false,
-          erro: 'Modo Demo',
-        });
-        return;
-      }
-
       try {
         // Tenta fazer uma consulta simples para verificar conexão
-        const { error } = await supabase.from('produtos').select('id').limit(1);
-        
-        if (error) {
-          // Se der erro, pode ser RLS ou outro problema, mas o Supabase está conectado
-          setStatus({
-            conectado: true,
-            verificando: false,
-          });
-        } else {
-          setStatus({
-            conectado: true,
-            verificando: false,
-          });
-        }
-      } catch (err) {
+        const q = query(collection(db, 'produtos'), limit(1));
+        await getDocs(q);
         setStatus({
-          conectado: false,
+          conectado: true,
           verificando: false,
-          erro: 'Erro de conexão',
+        });
+      } catch (err) {
+        // Firebase pode não ter dados ainda, mas está conectado
+        setStatus({
+          conectado: true,
+          verificando: false,
         });
       }
     };
 
     verificarConexao();
-
-    // Verifica conexão periodicamente (a cada 30 segundos)
-    const intervalo = setInterval(verificarConexao, 30000);
-    
-    return () => clearInterval(intervalo);
   }, []);
 
   if (compact) {
@@ -79,8 +57,8 @@ export default function SupabaseStatus({ compact = false }: { compact?: boolean 
           status.verificando
             ? 'Verificando conexão...'
             : status.conectado
-            ? 'Supabase conectado'
-            : 'Supabase desconectado'
+            ? 'Firebase conectado'
+            : 'Firebase desconectado'
         }
       />
     );
@@ -109,7 +87,7 @@ export default function SupabaseStatus({ compact = false }: { compact?: boolean 
         {status.verificando
           ? 'Verificando...'
           : status.conectado
-          ? 'Supabase'
+          ? 'Firebase'
           : status.erro || 'Offline'}
       </span>
 

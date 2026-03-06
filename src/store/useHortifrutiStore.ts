@@ -3,7 +3,7 @@
 // Qualidade, Rastreabilidade, Perdas, Sazonalidade
 // =============================================
 import { create } from 'zustand';
-import { qualidadeService, perdasService, rastreiosService, sazonalidadeService } from '../services/supabaseService';
+import { qualidadeService, perdasService, rastreiosService, sazonalidadeService } from '../services/database';
 
 // Registro de qualidade de lote
 export interface RegistroQualidade {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
 import { DollarSign, ShoppingCart, Package, AlertTriangle, TrendingUp, TrendingDown, ArrowUpRight, Clock } from "lucide-react";
-import { dashboardService } from "../services/supabaseService";
+import { dashboardService } from "../services/database";
 import { formatarMoeda, formatarDataHora } from "../utils/formatters";
 import type { MetricasDashboard } from "../types";
 

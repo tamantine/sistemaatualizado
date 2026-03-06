@@ -9,14 +9,15 @@ interface ModalProps {
     onFechar: () => void;
     titulo: string;
     children: ReactNode;
-    tamanho?: 'sm' | 'md' | 'lg' | 'xl';
+    tamanho?: 'sm' | 'md' | 'lg' | 'xl' | 'pagamento';
 }
 
 const tamanhos = {
-    sm: 'max-w-md',
+    sm: 'max-w-sm',
     md: 'max-w-lg',
-    lg: 'max-w-2xl',
+    lg: 'max-w-xl',
     xl: 'max-w-4xl',
+    pagamento: 'max-w-lg',
 };
 
 export default function Modal({ aberto, onFechar, titulo, children, tamanho = 'md' }: ModalProps) {
@@ -38,7 +39,7 @@ export default function Modal({ aberto, onFechar, titulo, children, tamanho = 'm
     if (!aberto) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -46,20 +47,20 @@ export default function Modal({ aberto, onFechar, titulo, children, tamanho = 'm
             />
             {/* Modal */}
             <div
-                className={`relative w-full ${tamanhos[tamanho]} bg-surface-800 border border-surface-700 rounded-2xl shadow-2xl animate-fade-in max-h-[90vh] flex flex-col`}
+                className={`relative w-full ${tamanhos[tamanho]} bg-surface-800 border border-surface-700 rounded-xl shadow-2xl animate-fade-in max-h-[85vh] sm:max-h-[90vh] flex flex-col`}
             >
                 {/* Cabeçalho */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-surface-700">
-                    <h2 className="text-lg font-bold text-surface-100">{titulo}</h2>
+                <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b border-surface-700 shrink-0">
+                    <h2 className="text-sm sm:text-base font-bold text-surface-100">{titulo}</h2>
                     <button
                         onClick={onFechar}
-                        className="p-1.5 rounded-lg text-surface-400 hover:text-surface-200 hover:bg-surface-700 transition-colors"
+                        className="p-1 rounded-lg text-surface-400 hover:text-surface-200 hover:bg-surface-700 transition-colors"
                     >
-                        <X size={20} />
+                        <X size={18} />
                     </button>
                 </div>
                 {/* Conteúdo */}
-                <div className="px-6 py-4 overflow-y-auto flex-1">
+                <div className="px-3 sm:px-4 py-2 sm:py-3 overflow-y-auto flex-1">
                     {children}
                 </div>
             </div>

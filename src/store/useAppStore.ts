@@ -4,6 +4,13 @@
 import { create } from 'zustand';
 import type { Toast } from '../types';
 
+// Tipos válidos para toast
+type ToastTipo = 'sucesso' | 'erro' | 'aviso' | 'info';
+
+function isValidToastTipo(tipo: unknown): tipo is ToastTipo {
+    return tipo === 'sucesso' || tipo === 'erro' || tipo === 'aviso' || tipo === 'info';
+}
+
 interface AppState {
     // Sidebar
     sidebarAberta: boolean;
@@ -25,17 +32,41 @@ export const useAppStore = create<AppState>((set) => ({
     toggleSidebar: () => set((s) => ({ sidebarAberta: !s.sidebarAberta })),
     setSidebarAberta: (aberta) => set({ sidebarAberta: aberta }),
 
-    // Toasts
+    // Toasts - com validação defensiva
     toasts: [],
     adicionarToast: (toast) => {
-        const id = crypto.randomUUID();
-        set((s) => ({ toasts: [...s.toasts, { ...toast, id }] }));
+        // Validação defensiva do toast
+        if (!toast || typeof toast !== 'object') {
+            console.warn('[AppStore] Toast inválido:', toast);
+            return;
+        }
+        
+        // Garante que o tipo seja válido
+        const toastValidado: Toast = {
+            id: crypto.randomUUID(),
+            tipo: isValidToastTipo(toast.tipo) ? toast.tipo : 'info',
+            titulo: toast.titulo || 'Notificação',
+            mensagem: toast.mensagem,
+        };
+        
+        set((s) => ({ toasts: [...s.toasts, toastValidado] }));
+        
         // Remove automaticamente após 4 segundos
         setTimeout(() => {
-            set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+            try {
+                set((s) => ({ toasts: s.toasts.filter((t) => t.id !== toastValidado.id) }));
+            } catch (e) {
+                console.warn('[AppStore] Erro ao remover toast automaticamente:', e);
+            }
         }, 4000);
     },
-    removerToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+    removerToast: (id) => {
+        if (!id || typeof id !== 'string') {
+            console.warn('[AppStore] ID inválido para removerToast:', id);
+            return;
+        }
+        set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));
+    },
 
     // Usuário mock
     usuario: { nome: 'Carlos Silva', cargo: 'Gerente' },

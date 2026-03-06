@@ -14,8 +14,8 @@ export default defineConfig({
           'ui-vendor': ['lucide-react'],
           // Chunk para gráficos
           'charts-vendor': ['recharts'],
-          // Chunk para Supabase
-          'supabase-vendor': ['@supabase/supabase-js'],
+          // Chunk para Firebase
+          'firebase-vendor': ['firebase/app', 'firebase/firestore', 'firebase/auth'],
           // Chunk para Zustand
           'store-vendor': ['zustand'],
         },

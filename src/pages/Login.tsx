@@ -1,6 +1,6 @@
 // =============================================
 // Página: Login - Acesso ao Sistema
-// Autenticação com Supabase + Modo Demo
+// Autenticação com Firebase Auth
 // =============================================
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -10,17 +10,29 @@ import { Lock, Mail, Loader2, ArrowRight, Zap } from 'lucide-react';
 
 export default function Login() {
     const navigate = useNavigate();
-    const { signIn, demoLogin, loading, user } = useAuthStore();
+    const { signIn, signUp, demoLogin, loading, user, error } = useAuthStore();
     const { adicionarToast } = useAppStore();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSignUp, setIsSignUp] = useState(false);
 
     // Redireciona se já estiver logado
     useEffect(() => {
         if (user) navigate('/', { replace: true });
     }, [user, navigate]);
+
+    // Mostra erro se houver
+    useEffect(() => {
+        if (error) {
+            adicionarToast({
+                tipo: 'erro',
+                titulo: isSignUp ? 'Erro ao criar conta' : 'Erro ao entrar',
+                mensagem: error,
+            });
+        }
+    }, [error]);
 
     async function handleLogin(e: React.FormEvent) {
         e.preventDefault();
@@ -28,18 +40,27 @@ export default function Login() {
 
         const { error } = await signIn(email, password);
 
-        if (error) {
-            adicionarToast({
-                tipo: 'erro',
-                titulo: 'Erro ao entrar',
-                mensagem: error.message === 'Invalid login credentials'
-                    ? 'Credenciais inválidas. Verifique seu e-mail e senha.'
-                    : error.message || 'Erro desconhecido ao fazer login.',
-            });
-            setIsSubmitting(false);
-        } else {
+        if (!error) {
             navigate('/', { replace: true });
         }
+        setIsSubmitting(false);
+    }
+
+    async function handleSignUp(e: React.FormEvent) {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        const { error } = await signUp(email, password);
+
+        if (!error) {
+            adicionarToast({
+                tipo: 'sucesso',
+                titulo: 'Conta criada!',
+                mensagem: 'Bem-vindo ao sistema!',
+            });
+            navigate('/', { replace: true });
+        }
+        setIsSubmitting(false);
     }
 
     function handleDemoLogin() {
@@ -59,13 +80,17 @@ export default function Login() {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 shadow-xl shadow-brand-500/20 mb-4 transform hover:scale-105 transition-transform duration-300">
                         <Lock className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">Bem-vindo de volta!</h1>
-                    <p className="text-surface-400 text-sm">Acesse sua conta para gerenciar seu negócio</p>
+                    <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+                        {isSignUp ? 'Criar Conta' : 'Bem-vindo de volta!'}
+                    </h1>
+                    <p className="text-surface-400 text-sm">
+                        {isSignUp ? 'Cadastre-se para gerenciar seu negócio' : 'Acesse sua conta para gerenciar seu negócio'}
+                    </p>
                 </div>
 
-                {/* Login Form */}
+                {/* Login/SignUp Form */}
                 <div className="glass p-8 rounded-3xl border border-surface-700/50 shadow-2xl backdrop-blur-xl">
-                    <form onSubmit={handleLogin} className="space-y-6">
+                    <form onSubmit={isSignUp ? handleSignUp : handleLogin} className="space-y-6">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-surface-300 ml-1">E-mail</label>
                             <div className="relative group">
@@ -92,9 +117,10 @@ export default function Login() {
                                 <input
                                     type="password"
                                     required
+                                    minLength={6}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
+                                    placeholder="Mínimo 6 caracteres"
                                     className="w-full bg-surface-800/50 border border-surface-600 rounded-xl pl-11 pr-4 py-3.5 text-surface-100 placeholder:text-surface-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all text-sm shadow-inner"
                                 />
                             </div>
@@ -109,7 +135,7 @@ export default function Login() {
                                 <Loader2 className="animate-spin h-5 w-5" />
                             ) : (
                                 <>
-                                    <span>Entrar no Sistema</span>
+                                    <span>{isSignUp ? 'Criar Conta' : 'Entrar no Sistema'}</span>
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
@@ -131,33 +157,41 @@ export default function Login() {
                     >
                         <Zap className="w-5 h-5 text-accent-400 group-hover:scale-110 transition-transform" />
                         <span>Entrar como Demo</span>
-                        <span className="text-xs bg-accent-500/20 text-accent-400 px-2 py-0.5 rounded-full font-normal">
-                            sem cadastro
-                        </span>
                     </button>
 
-                    <div className="mt-4 p-3 bg-accent-500/10 border border-accent-500/20 rounded-xl">
-                        <p className="text-xs text-accent-300 text-center">
-                            🚀 <strong>Modo Demo</strong> — Explore todas as funcionalidades com dados de exemplo.
-                            Nenhum dado real é alterado.
-                        </p>
+                    {/* Toggle Login/SignUp */}
+                    <div className="mt-6 text-center">
+                        {isSignUp ? (
+                            <p className="text-sm text-surface-400">
+                                Já tem conta?{' '}
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsSignUp(false)}
+                                    className="text-brand-400 hover:text-brand-300 font-medium"
+                                >
+                                    Entrar
+                                </button>
+                            </p>
+                        ) : (
+                            <p className="text-sm text-surface-400">
+                                Não tem conta?{' '}
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsSignUp(true)}
+                                    className="text-brand-400 hover:text-brand-300 font-medium"
+                                >
+                                    Criar conta
+                                </button>
+                            </p>
+                        )}
                     </div>
 
-                    <div className="mt-6 pt-6 border-t border-surface-700/50 text-center">
-                        <p className="text-xs text-surface-500">
-                            Problemas para acessar?{' '}
-                            <a href="#" className="text-brand-400 hover:text-brand-300 transition-colors font-medium">
-                                Contate o suporte
-                            </a>
+                    {/* Footer */}
+                    <div className="mt-8 text-center">
+                        <p className="text-xs text-surface-600 font-medium tracking-wide opacity-60">
+                            &copy; {new Date().getFullYear()} Hortifruti Master • v1.0.0
                         </p>
                     </div>
-                </div>
-
-                {/* Footer */}
-                <div className="mt-8 text-center">
-                    <p className="text-xs text-surface-600 font-medium tracking-wide opacity-60">
-                        &copy; {new Date().getFullYear()} Hortifruti Master • v1.0.0
-                    </p>
                 </div>
             </div>
         </div>
