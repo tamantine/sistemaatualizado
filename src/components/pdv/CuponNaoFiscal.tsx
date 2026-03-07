@@ -56,7 +56,7 @@ export default function CupomNaoFiscal({ venda, itens, onFechar }: CupomNaoFisca
     const printRef = useRef<HTMLDivElement>(null);
     const config = getConfigLoja();
 
-    const nomeLoja = config.nomeLoja || 'HORTIFRUTI MASTER';
+    const nomeLoja = config.nomeLoja || 'HORTIFRUTI BOM PREÇO';
     const cnpjLoja = config.cnpjLoja || '';
     const enderecoLoja = config.enderecoLoja || '';
     const rodapeLoja = config.rodape || 'Obrigado pela preferência! Volte sempre!';

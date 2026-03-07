@@ -653,7 +653,7 @@ export class ImpressoraService {
             .linha('Impressora conectada com sucesso!')
             .linha('ESC/POS Protocol OK')
             .separador('-', this.config.colunas)
-            .linha('Hortifruti Master PDV')
+            .linha('Hortifruti Bom Preço PDV')
             .feed(3)
             .cortar();
         await this.imprimir(esc.toUint8Array());

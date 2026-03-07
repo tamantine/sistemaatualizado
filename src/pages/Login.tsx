@@ -189,7 +189,7 @@ export default function Login() {
                     {/* Footer */}
                     <div className="mt-8 text-center">
                         <p className="text-xs text-surface-600 font-medium tracking-wide opacity-60">
-                            &copy; {new Date().getFullYear()} Hortifruti Master • v1.0.0
+                            &copy; {new Date().getFullYear()} Hortifruti Bom Preço • v1.0.0
                         </p>
                     </div>
                 </div>

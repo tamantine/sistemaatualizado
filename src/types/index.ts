@@ -1,5 +1,5 @@
 // =============================================
-// HORTIFRUTI MASTER — Tipos TypeScript
+// HORTIFRUTI BOM PREÇO — Tipos TypeScript
 // =============================================
 
 // Categoria de produto

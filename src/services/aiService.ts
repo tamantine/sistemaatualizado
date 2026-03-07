@@ -29,7 +29,7 @@ A proporção final DEVE ser 9:16 (vertical para stories). Garanta estética de 
         "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": window.location.origin,
-        "X-Title": "Hortifruti Master"
+        "X-Title": "Hortifruti Bom Preço"
       },
       body: JSON.stringify({
         model: "black-forest-labs/flux.2-flex",

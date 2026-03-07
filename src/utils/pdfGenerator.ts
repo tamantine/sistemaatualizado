@@ -16,7 +16,7 @@ export const gerarRelatorioFechamentoPDF = (caixa: Caixa, vendas: Venda[], movim
   // 1. Cabeçalho
   doc.setFontSize(22);
   doc.setTextColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-  doc.text('Hortifruti Master', 14, 22);
+  doc.text('Hortifruti Bom Preço', 14, 22);
   
   doc.setFontSize(14);
   doc.setTextColor(colors.dark[0], colors.dark[1], colors.dark[2]);
