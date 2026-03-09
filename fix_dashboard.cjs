@@ -7,7 +7,7 @@ let content = fs.readFileSync(filePath, 'utf8');
 const regexDashboardService = /export const dashboardService = \{[\s\S]*?\n\};\n\n/m;
 const match = content.match(regexDashboardService);
 
-const newDashboardService = \`export const dashboardService = {
+const newDashboardService = `export const dashboardService = {
   async obterMetricas() {
     try {
       // Buscar vendas de hoje
@@ -133,7 +133,7 @@ const newDashboardService = \`export const dashboardService = {
   },
 };
 
-\`;
+`;
 
 if (match) {
   content = content.replace(regexDashboardService, newDashboardService);

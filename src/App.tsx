@@ -18,6 +18,7 @@ import Encartes from './pages/Encartes';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAuthStore } from './store/useAuthStore';
+import { FloatingAIAssistant } from './components/FloatingAIAssistant';
 
 function EmBreve({ titulo }: { titulo: string }) {
   return (
@@ -70,6 +71,7 @@ function App() {
           </Route>
         </Routes>
       </BrowserRouter>
+      <FloatingAIAssistant />
     </ErrorBoundary>
   );
 }
