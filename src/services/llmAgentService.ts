@@ -44,6 +44,25 @@ const tools = [
       description: "Retorna as métricas gerais de vendas do dia, ticket médio, e alertas de estoque baixo.",
       parameters: { type: "object", properties: {}, required: [] }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "criar_produto",
+      description: "Cria um novo produto no banco de dados do sistema.",
+      parameters: {
+        type: "object",
+        properties: {
+          nome: { type: "string", description: "Nome completo do produto a ser cadastrado." },
+          preco_venda: { type: "number", description: "Preço de venda do produto." },
+          estoque_atual: { type: "number", description: "Quantidade em estoque inicial do produto." },
+          preco_custo: { type: "number", description: "Custo de aquisição do produto (opcional)." },
+          categoria_id: { type: "string", description: "ID da categoria do produto (opcional)." },
+          unidade: { type: "string", description: "Unidade de medida, por exemplo: 'kg', 'un' (opcional)." }
+        },
+        required: ["nome", "preco_venda", "estoque_atual"]
+      }
+    }
   }
 ];
 
@@ -55,8 +74,9 @@ Regras Estritas:
 1. Responda SEMPRE em Português (PT-BR) de forma amigável, clara e profissional.
 2. Em caso de dúvidas sobre produtos, clientes ou status, CHAME as funções (tools) do sistema para ter clareza. NÃO INVENTE NADA.
 3. Se o usuário pedir para alterar preço, nome ou estoque de um produto, USE a função 'atualizar_produto'. Importante: Certifique-se de usar a string de ID exata do banco listando os produtos se necessário.
-4. Ao consultar e responder sobre listagens, mostre apenas as informações mais relevantes ou formate como uma tabela limpa.
-5. Avise cordialmente o usuário as ações que tomou no sistema.`;
+4. Se o usuário pedir para CADASTRAR ou CRIAR um novo produto, USE a função 'criar_produto' informando os campos básicos requiridos.
+5. Ao consultar e responder sobre listagens, mostre apenas as informações mais relevantes ou formate como uma tabela limpa.
+6. Avise cordialmente o usuário as ações que tomou no sistema.`;
 
 // Executa a função local baseada no nome chamado pela IA
 async function executeToolCall(functionName: string, args: string): Promise<any> {
@@ -70,6 +90,14 @@ async function executeToolCall(functionName: string, args: string): Promise<any>
         const { id, ...updates } = parsedArgs;
         console.log(`[LLM Tool] Atualizando Produto ${id} com:`, updates);
         return await produtosService.atualizar(id, updates);
+      }
+      case "criar_produto": {
+        console.log(`[LLM Tool] Criando Produto com:`, parsedArgs);
+        return await produtosService.criar({
+          ...parsedArgs,
+          ativo: true,
+          vende_por_peso: parsedArgs.unidade === 'kg'
+        });
       }
       case "listar_clientes":
         return await clientesService.listar();
